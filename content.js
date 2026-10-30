@@ -63,10 +63,66 @@
    * Check if author has an official Grey Badge (Government / State Authority / Multilateral Org)
    * Strictly detects official grey checkmark accounts on X.
   /**
+   * Helper to determine if a verified SVG icon on X represents the official Grey Badge (Government / Head of State)
+   */
+  function isSvgGreyBadge(svgEl) {
+    if (!svgEl) return false;
+    const aria = (svgEl.getAttribute('aria-label') || '').toLowerCase();
+    // 1. Direct aria-label mentions
+    if (/government|multilateral|state-affiliated|دولتی|حاکمیتی/i.test(aria)) {
+      return true;
+    }
+    // Exclude blue or gold checkmark explicitly named
+    if (/blue|gold|subscribed|طلایی|تیک\s*آبی/i.test(aria)) {
+      return false;
+    }
+
+    // 2. Computed Color Inspection
+    try {
+      const candidates = [
+        svgEl,
+        svgEl.parentElement,
+        svgEl.querySelector('path'),
+        svgEl.querySelector('g')
+      ].filter(Boolean);
+
+      for (const el of candidates) {
+        const style = window.getComputedStyle(el);
+        const colorStr = style.color || style.fill || '';
+        const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+        if (match) {
+          const r = parseInt(match[1], 10);
+          const g = parseInt(match[2], 10);
+          const b = parseInt(match[3], 10);
+
+          // Exclude Blue Checkmark: Blue is high and dominates Red
+          if (b > 175 && (b - r > 65)) return false;
+
+          // Exclude Gold Checkmark: Red and Green are high, Blue is low
+          if (r > 190 && g > 140 && b < 90) return false;
+
+          // Exclude extreme white/black
+          if (r > 245 && g > 245 && b > 245) continue;
+          if (r < 35 && g < 35 && b < 35) continue;
+
+          // Grey Badge on Twitter/X:
+          // Monochromatic/low saturation (diff <= 58) and mid brightness (45 <= max <= 215)
+          const maxC = Math.max(r, g, b);
+          const minC = Math.min(r, g, b);
+          if ((maxC - minC) <= 58 && maxC >= 45 && maxC <= 215) {
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return false;
+  }
+
+  /**
    * Check if author has an official Grey Badge (Government / State Authority / Multilateral Org)
    * Strictly detects official grey checkmark accounts on X.
-   * Checks if an account strictly belongs to official government entities / heads of state / state authorities
-   * STRICT: Never match generic blue/gold checkmarks, secondary text colors, or global document elements!
    */
   function isAuthorGreyBadge(containerEl) {
     if (!containerEl || containerEl === document || containerEl === document.body) return false;
@@ -79,25 +135,89 @@
 
     // 1. Strict Twitter affiliate badge inside author container ONLY (e.g. "Government official", "Government organization")
     const affiliateEl = containerEl.querySelector(
-      '[data-testid="UserAffiliateBadge"], a[href*="/rules-and-policies/state-affiliated"], a[href*="help.twitter.com"][href*="government"]'
+      '[data-testid="UserAffiliateBadge"], a[href*="/rules-and-policies/state-affiliated"], a[href*="help.twitter.com"][href*="government"], a[href*="help.twitter.com"][href*="profile-labels"]'
     );
 
     if (affiliateEl) {
       const txt = (affiliateEl.innerText || affiliateEl.getAttribute('aria-label') || '').toLowerCase();
-      // Must explicitly mention government / state authority, NOT bare 'official' and NOT Iranian embassies
-      if (/government\s*official|government\s*organization|state-affiliated|مقام\s*دولتی|نهاد\s*دولتی|head\s*of\s*state/i.test(txt)) {
+      if (/government|state-affiliated|دولتی|حاکمیتی|head\s*of\s*state|prime\s*minister|president|minister/i.test(txt)) {
         return true;
       }
     }
 
-    // 2. Check if verified SVG explicitly specifies government in aria-label
+    // 2. Check all verified SVGs inside container or UserName element
     const verifiedSvgs = containerEl.querySelectorAll(
-      'svg[data-testid="icon-verified"], svg[aria-label*="Verified"], svg[aria-label*="تایید"], svg[aria-label*="تأیید"]'
+      'svg[data-testid="icon-verified"], svg[aria-label*="Verified"], svg[aria-label*="تایید"], svg[aria-label*="تأیید"], svg[aria-label*="Government"], svg[aria-label*="دولتی"]'
     );
 
     for (const svgEl of verifiedSvgs) {
-      const aria = (svgEl.getAttribute('aria-label') || '').toLowerCase();
-      if (/government|دولتی|حاکمیتی/i.test(aria) && !/subscribed|تیک\s*آبی/i.test(aria)) {
+      if (isSvgGreyBadge(svgEl)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Helper to determine if a verified SVG icon on X represents the official Gold Badge (Verified Organization / Business)
+   */
+  function isSvgGoldBadge(svgEl) {
+    if (!svgEl) return false;
+    const aria = (svgEl.getAttribute('aria-label') || '').toLowerCase();
+    // 1. Direct aria-label mentions
+    if (/organization|business|سازمان|شرکت|طلایی|gold/i.test(aria)) {
+      return true;
+    }
+    // Exclude blue or grey checkmarks
+    if (/blue|grey|gray|خاکستری|تیک\s*آبی/i.test(aria)) {
+      return false;
+    }
+
+    // 2. Computed Color Inspection
+    try {
+      const candidates = [
+        svgEl,
+        svgEl.parentElement,
+        svgEl.querySelector('path'),
+        svgEl.querySelector('g')
+      ].filter(Boolean);
+
+      for (const el of candidates) {
+        const style = window.getComputedStyle(el);
+        const colorStr = style.color || style.fill || '';
+        const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+        if (match) {
+          const r = parseInt(match[1], 10);
+          const g = parseInt(match[2], 10);
+          const b = parseInt(match[3], 10);
+
+          // Gold checkmark on X: #ffd400 / rgb(255, 212, 0)
+          // Red and Green are high, Blue is very low
+          if (r >= 180 && g >= 140 && b <= 75) {
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return false;
+  }
+
+  /**
+   * Check if author has an official Gold Badge (Verified Organization / Official Business)
+   */
+  function isAuthorGoldBadge(containerEl) {
+    if (!containerEl || containerEl === document || containerEl === document.body) return false;
+
+    // Check verified SVGs
+    const verifiedSvgs = containerEl.querySelectorAll(
+      'svg[data-testid="icon-verified"], svg[aria-label*="Verified"], svg[aria-label*="تایید"], svg[aria-label*="تأیید"], svg[aria-label*="Organization"], svg[aria-label*="طلایی"]'
+    );
+
+    for (const svgEl of verifiedSvgs) {
+      if (isSvgGoldBadge(svgEl)) {
         return true;
       }
     }
@@ -213,6 +333,9 @@
         return { icon: '🎭', text: 'نفوذی / قلابی', className: 'xray-mb-falseflag' };
       case 'government':
         return { icon: '🏛️', text: 'دولتی رسمی', className: 'xray-mb-gov' };
+      case 'organization':
+      case 'business':
+        return { icon: '🏢', text: 'سازمان / رسانه رسمی', className: 'xray-mb-gold' };
       case 'diplomatic':
         return { icon: '🌐', text: 'دیپلماتیک', className: 'xray-mb-media' };
       case 'media':
@@ -241,6 +364,7 @@
     if (idLine.includes('چپ') || idLine.includes('چپول') || idLine.includes('۵۷ی')) return 'chapi';
     if (idLine.includes('پهلوی') || idLine.includes('ملی‌گرا') || idLine.includes('پادشاهی') || idLine.includes('شهبانو') || idLine.includes('مراد ویسی') || idLine.includes('مشروطه')) return 'pahlavi';
     if (idLine.includes('تیک خاکستری') || idLine.includes('نشان تایید خاکستری') || idLine.includes('حساب رسمی دولتی')) return 'government';
+    if (idLine.includes('تیک طلایی') || idLine.includes('نشان تایید طلایی') || idLine.includes('سازمان رسمی') || idLine.includes('شرکت رسمی') || idLine.includes('شرکت ثبت‌شده') || idLine.includes('نهاد تجاری') || idLine.includes('organization')) return 'organization';
     if (idLine.includes('دیپلماتیک') || idLine.includes('وزارت امور خارجه')) return 'diplomatic';
     if (idLine.includes('روزنامه‌نگار') || idLine.includes('خبرنگار') || idLine.includes('رسانه') || idLine.includes('خبرگزاری') || idLine.includes('تلویزیونی') || idLine.includes('پژوهشگر') || idLine.includes('نویسنده') || idLine.includes('طنزپرداز') || idLine.includes('هنرمند') || idLine.includes('فعال حقوق بشر') || idLine.includes('آموزشکده') || idLine.includes('نهاد مدنی')) return 'media';
     return '';
@@ -403,12 +527,10 @@
 
           const isStrictGov = Boolean(
             !isIranianEntity &&
-            entry.isGreyBadge &&
-            (entry.verifiedType === 'Government' ||
-             (entry.governmentLabel && /government\s*official|government\s*organization|state-affiliated|مقام\s*دولتی|نهاد\s*دولتی/i.test(entry.governmentLabel)))
+            (Boolean(entry.isGreyBadge) || entry.verifiedType === 'Government')
           );
 
-          if (entry.isGreyBadge && (!isStrictGov || isIranianEntity)) {
+          if (entry.isGreyBadge && isIranianEntity) {
             entry.isGreyBadge = false;
             if (entry.verifiedType === 'Government') entry.verifiedType = '';
             needsCleanup = true;
@@ -429,8 +551,9 @@
             followingRaw: entry.followingRaw || '',
             isVerified: Boolean(entry.isVerified),
             isGreyBadge: isStrictGov,
-            verifiedType: isStrictGov ? 'Government' : (entry.verifiedType === 'Government' ? '' : (entry.verifiedType || '')),
-            governmentLabel: isStrictGov ? (entry.governmentLabel || '') : '',
+            isGoldBadge: Boolean(entry.isGoldBadge || entry.verifiedType === 'Business'),
+            verifiedType: isStrictGov ? 'Government' : (entry.isGoldBadge || entry.verifiedType === 'Business' ? 'Business' : (entry.verifiedType === 'Government' ? '' : (entry.verifiedType || ''))),
+            governmentLabel: isStrictGov ? (entry.governmentLabel || '') : (entry.isGoldBadge || entry.verifiedType === 'Business' ? (entry.governmentLabel || 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)') : ''),
             tweets: tweetsMap,
             hashtags: hashtagsMap,
             retweetedHandles: retweetedMap,
@@ -465,9 +588,7 @@
           );
           const isStrictGov = Boolean(
             !isIranianEntity &&
-            val.isGreyBadge &&
-            (val.verifiedType === 'Government' ||
-             (val.governmentLabel && /government\s*official|government\s*organization|state-affiliated|مقام\s*دولتی|نهاد\s*دولتی/i.test(val.governmentLabel)))
+            (Boolean(val.isGreyBadge) || val.verifiedType === 'Government')
           );
           serialized[handle] = {
             restId: val.restId || '',
@@ -480,8 +601,9 @@
             followingRaw: val.followingRaw || '',
             isVerified: Boolean(val.isVerified),
             isGreyBadge: isStrictGov,
-            verifiedType: isStrictGov ? 'Government' : (val.verifiedType === 'Government' ? '' : (val.verifiedType || '')),
-            governmentLabel: isStrictGov ? (val.governmentLabel || '') : '',
+            isGoldBadge: Boolean(val.isGoldBadge || val.verifiedType === 'Business'),
+            verifiedType: isStrictGov ? 'Government' : (val.isGoldBadge || val.verifiedType === 'Business' ? 'Business' : (val.verifiedType === 'Government' ? '' : (val.verifiedType || ''))),
+            governmentLabel: isStrictGov ? (val.governmentLabel || '') : (val.isGoldBadge || val.verifiedType === 'Business' ? (val.governmentLabel || 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)') : ''),
             tweets: Object.fromEntries(Array.from(val.tweets.entries()).slice(-40)),
             hashtags: Object.fromEntries(val.hashtags.entries()),
             retweetedHandles: Object.fromEntries((val.retweetedHandles || new Map()).entries()),
@@ -1270,16 +1392,32 @@
     // STRICT: Only genuine non-regime accounts with an actual verified Grey Badge can be Government
     const isGovernment = Boolean(
       !isIranianRegimeEntity &&
-      Boolean(options.isGreyBadge) &&
       (
+        Boolean(options.isGreyBadge) ||
+        options.verifiedType === 'Government' ||
+        lowerId.includes('حساب رسمی دولتی') ||
         lowerId.includes('تیک خاکستری') ||
         lowerId.includes('نشان تایید خاکستری') ||
         lowerId.includes('نشان رسمی خاکستری') ||
         lowerId.includes('grey checkmark') ||
         lowerId.includes('grey badge') ||
-        lowerId.includes('حساب رسمی دولتی / حاکمیتی') ||
-        lowerId.includes('حساب رسمی دولتی و حاکمیتی') ||
         (options.model && options.model.includes('Government'))
+      )
+    );
+
+    const isGoldBadge = Boolean(
+      !isGovernment && !isIranianRegimeEntity &&
+      (
+        Boolean(options.isGoldBadge) ||
+        options.verifiedType === 'Business' ||
+        lowerId.includes('تیک طلایی') ||
+        lowerId.includes('نشان تایید طلایی') ||
+        lowerId.includes('سازمان رسمی') ||
+        lowerId.includes('شرکت رسمی') ||
+        lowerId.includes('شرکت ثبت‌شده') ||
+        lowerId.includes('gold checkmark') ||
+        lowerId.includes('gold badge') ||
+        (options.model && options.model.includes('Organization'))
       )
     );
 
@@ -1643,6 +1781,7 @@
     else if (isHomayoun) currentFactionKey = 'homayoun';
     else if (isAliEbrahimzade) currentFactionKey = 'false_flag';
     else if (isGovernment) currentFactionKey = 'government';
+    else if (isGoldBadge) currentFactionKey = 'organization';
     else if (isFalseFlag) currentFactionKey = 'false_flag';
     else if (isMek) currentFactionKey = 'mek';
     else if (isArzeshi) currentFactionKey = 'arzeshi';
@@ -1657,6 +1796,8 @@
       box.classList.add('xray-arzeshi-box');
     } else if (isGovernment) {
       box.classList.add('xray-government-box');
+    } else if (isGoldBadge) {
+      box.classList.add('xray-gold-box');
     } else if (isFalseFlag || isOmidDana || isFakhravar || isHomayoun || isMasih || isRonaghi || isAliEbrahimzade) {
       box.classList.add('xray-arzeshi-box');
     } else if (isMek) {
@@ -1725,8 +1866,12 @@
       modelBadgeClass += ' xray-badge-arzeshi';
     } else if (isGovernment) {
       headerIcon = '🏛️';
-      headerTitle = 'حساب رسمی دولتی / حاکمیتی (تیک خاکستری)';
+      headerTitle = '🏛️ حساب رسمی دولتی / حاکمیتی (تیک خاکستری)';
       modelBadgeClass += ' xray-badge-government';
+    } else if (isGoldBadge) {
+      headerIcon = '🏢';
+      headerTitle = '🏢 سازمان رسمی / رسانه و شرکت ثبت‌شده (تیک طلایی)';
+      modelBadgeClass += ' xray-badge-gold';
     } else if (isRahmani) {
       headerIcon = '🟣☭';
       headerTitle = '🟣☭ تقی رحمانی (مذهبی‌چپول ۵۷ی / همسر نرگس محمدی و ضد پادشاهی)';
@@ -2917,15 +3062,17 @@
     const isCachedAuthorStrictGov = Boolean(
       !isIranianAccount &&
       cachedAuthorRecord &&
-      cachedAuthorRecord.isGreyBadge &&
-      (cachedAuthorRecord.verifiedType === 'Government' ||
-       (cachedAuthorRecord.governmentLabel && /government\s*official|government\s*organization|state-affiliated|مقام\s*دولتی|نهاد\s*دولتی/i.test(cachedAuthorRecord.governmentLabel)))
+      (Boolean(cachedAuthorRecord.isGreyBadge) || cachedAuthorRecord.verifiedType === 'Government')
     );
     const domIsGreyBadge = !isIranianAccount && isAuthorGreyBadge(tweetEl);
     const isGreyBadge = isCachedAuthorStrictGov || domIsGreyBadge;
-    const verifiedType = isGreyBadge ? 'Government' : (cachedAuthorRecord?.verifiedType || '');
-    const governmentLabel = isGreyBadge ? (cachedAuthorRecord?.governmentLabel || extractAffiliateLabel(tweetEl)) : '';
-    const isVerified = Boolean(isAuthorVerified(tweetEl) || isGreyBadge || (cachedAuthorRecord && cachedAuthorRecord.isVerified));
+    const domIsGoldBadge = !isIranianAccount && (!isGreyBadge) && isAuthorGoldBadge(tweetEl);
+    const isGoldBadge = (!isGreyBadge) && (Boolean(cachedAuthorRecord?.isGoldBadge) || domIsGoldBadge || cachedAuthorRecord?.verifiedType === 'Business');
+    const verifiedType = isGreyBadge ? 'Government' : (isGoldBadge ? 'Business' : (cachedAuthorRecord?.verifiedType || ''));
+    const governmentLabel = isGreyBadge
+      ? (cachedAuthorRecord?.governmentLabel || extractAffiliateLabel(tweetEl) || 'حساب رسمی دولتی / حاکمیتی')
+      : (isGoldBadge ? 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)' : '');
+    const isVerified = Boolean(isAuthorVerified(tweetEl) || isGreyBadge || isGoldBadge || (cachedAuthorRecord && cachedAuthorRecord.isVerified));
 
     // Check if user is currently on this author's profile page (e.g. x.com/mslm1090305)
     let bio = '';
@@ -3022,6 +3169,7 @@
           displayName: tweetAuthor,
           isVerified,
           isGreyBadge,
+          isGoldBadge,
           verifiedType,
           governmentLabel,
           bio,
@@ -3197,20 +3345,33 @@
       const isCachedProfileStrictGov = Boolean(
         !isIranianProfile &&
         cachedProfileRecord &&
-        cachedProfileRecord.isGreyBadge &&
-        (cachedProfileRecord.verifiedType === 'Government' ||
-         (cachedProfileRecord.governmentLabel && /government\s*official|government\s*organization|state-affiliated|مقام\s*دولتی|نهاد\s*دولتی/i.test(cachedProfileRecord.governmentLabel)))
+        (Boolean(cachedProfileRecord.isGreyBadge) || cachedProfileRecord.verifiedType === 'Government')
       );
-      const domProfileGreyBadge = !isIranianProfile && (isAuthorGreyBadge(headerContainer) || isAuthorGreyBadge(userNameEl));
+      const domProfileGreyBadge = !isIranianProfile && (
+        isAuthorGreyBadge(headerContainer) ||
+        isAuthorGreyBadge(userNameEl) ||
+        isAuthorGreyBadge(document.querySelector('[data-testid="UserName"]')) ||
+        isAuthorGreyBadge(document.querySelector('[data-testid="User-Name"]'))
+      );
       const isGreyBadge = isCachedProfileStrictGov || domProfileGreyBadge;
-      const verifiedType = isGreyBadge ? 'Government' : (cachedProfileRecord?.verifiedType || '');
+      const domProfileGoldBadge = !isIranianProfile && (!isGreyBadge) && (
+        isAuthorGoldBadge(headerContainer) ||
+        isAuthorGoldBadge(userNameEl) ||
+        isAuthorGoldBadge(document.querySelector('[data-testid="UserName"]')) ||
+        isAuthorGoldBadge(document.querySelector('[data-testid="User-Name"]'))
+      );
+      const isGoldBadge = (!isGreyBadge) && (Boolean(cachedProfileRecord?.isGoldBadge) || domProfileGoldBadge || cachedProfileRecord?.verifiedType === 'Business');
+      const verifiedType = isGreyBadge ? 'Government' : (isGoldBadge ? 'Business' : (cachedProfileRecord?.verifiedType || ''));
       const governmentLabel = isGreyBadge ? (cachedProfileRecord?.governmentLabel ||
         extractAffiliateLabel(headerContainer) ||
-        extractAffiliateLabel(userNameEl)) : '';
+        extractAffiliateLabel(userNameEl) ||
+        extractAffiliateLabel(document.querySelector('[data-testid="UserName"]')) ||
+        'حساب رسمی دولتی / حاکمیتی (تیک خاکستری)') : (isGoldBadge ? 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)' : '');
       const isVerified = Boolean(
         isAuthorVerified(headerContainer) ||
         isAuthorVerified(userNameEl) ||
         isGreyBadge ||
+        isGoldBadge ||
         (cachedProfileRecord && cachedProfileRecord.isVerified)
       );
 
@@ -3276,6 +3437,7 @@
             metadata: [metadata, followerStats].filter(Boolean).join(' | '),
             isVerified,
             isGreyBadge,
+            isGoldBadge,
             verifiedType,
             governmentLabel,
             followerStats,
@@ -3401,15 +3563,21 @@
     const hasProfileHeaderLoaded = Boolean(userNameEl || userDescEl || joinDateEl || (rec && rec.bio));
     const isCachedRecStrictGov = Boolean(
       rec &&
-      rec.isGreyBadge &&
-      (rec.verifiedType === 'Government' ||
-       (rec.governmentLabel && /government|state-affiliated|دولتی|حاکمیتی|سفارت|وزارت/i.test(rec.governmentLabel)))
+      (Boolean(rec.isGreyBadge) || rec.verifiedType === 'Government')
     );
     const profileContainer = userNameEl ? (userNameEl.parentElement || userNameEl) : null;
-    const domHeaderGreyBadge = isAuthorGreyBadge(profileContainer) || isAuthorGreyBadge(userNameEl);
+    const domHeaderGreyBadge = isAuthorGreyBadge(profileContainer) || isAuthorGreyBadge(userNameEl) || isAuthorGreyBadge(document.querySelector('[data-testid="UserName"]'));
     const isGreyBadge = isCachedRecStrictGov || domHeaderGreyBadge;
-    const verifiedType = isGreyBadge ? 'Government' : (rec?.verifiedType || '');
-    const governmentLabel = isGreyBadge ? (rec?.governmentLabel || extractAffiliateLabel(profileContainer || userNameEl)) : '';
+    const domHeaderGoldBadge = (!isGreyBadge) && (
+      isAuthorGoldBadge(profileContainer) ||
+      isAuthorGoldBadge(userNameEl) ||
+      isAuthorGoldBadge(document.querySelector('[data-testid="UserName"]'))
+    );
+    const isGoldBadge = (!isGreyBadge) && (Boolean(rec?.isGoldBadge) || domHeaderGoldBadge || rec?.verifiedType === 'Business');
+    const verifiedType = isGreyBadge ? 'Government' : (isGoldBadge ? 'Business' : (rec?.verifiedType || ''));
+    const governmentLabel = isGreyBadge
+      ? (rec?.governmentLabel || extractAffiliateLabel(profileContainer || userNameEl) || 'حساب رسمی دولتی / حاکمیتی')
+      : (isGoldBadge ? 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)' : '');
 
     return {
       success: true,
@@ -3422,8 +3590,9 @@
       followersRaw: finalFollowers,
       followingRaw: finalFollowing,
       metadata: domMetadata,
-      isVerified: Boolean((rec && rec.isVerified) || isAuthorVerified(userNameEl) || (profileContainer && isAuthorVerified(profileContainer))),
+      isVerified: Boolean((rec && rec.isVerified) || isAuthorVerified(userNameEl) || (profileContainer && isAuthorVerified(profileContainer)) || isGreyBadge || isGoldBadge),
       isGreyBadge,
+      isGoldBadge,
       verifiedType,
       governmentLabel,
       observedTweetCount: historyPayload.observedTweetCount || rawTweets.length,

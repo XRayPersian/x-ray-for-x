@@ -83,6 +83,10 @@
       verifiedType.toLowerCase() === 'government' ||
       u.affiliates_highlighted_label?.label?.userLabelType === 'GovernmentLabel' ||
       /government/i.test(u.affiliates_highlighted_label?.label?.description || '');
+    const isGoldBadge =
+      verifiedType.toLowerCase() === 'business' ||
+      u.affiliates_highlighted_label?.label?.userLabelType === 'BusinessLabel' ||
+      /organization|business|تجاری|شرکت|سازمان/i.test(u.affiliates_highlighted_label?.label?.description || '');
     const governmentLabel = (u.affiliates_highlighted_label?.label?.description || '').trim();
     const isVerified = Boolean(u.is_blue_verified || u.legacy?.verified || verifiedType);
     const userUrl = (
@@ -102,8 +106,9 @@
       followingCount,
       isVerified,
       isGreyBadge: Boolean(isGreyBadge),
-      verifiedType: isGreyBadge ? 'Government' : verifiedType,
-      governmentLabel: governmentLabel || (isGreyBadge ? 'حساب رسمی دولتی / حاکمیتی' : ''),
+      isGoldBadge: Boolean(isGoldBadge),
+      verifiedType: isGreyBadge ? 'Government' : (isGoldBadge ? 'Business' : verifiedType),
+      governmentLabel: governmentLabel || (isGreyBadge ? 'حساب رسمی دولتی / حاکمیتی' : (isGoldBadge ? 'سازمان رسمی / شرکت ثبت‌شده' : '')),
       userUrl
     };
   }

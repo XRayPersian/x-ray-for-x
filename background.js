@@ -1460,6 +1460,22 @@ function buildStandardFactionReport(faction, customName = '', customNote = '') {
         isFalseFlag: false
       };
     }
+    case 'organization':
+    case 'business': {
+      return {
+        identity: `🏢 سازمان رسمی / رسانه و شرکت ثبت‌شده (دارای نشان تایید طلایی)${label}`,
+        probability: '۰٪ (سازمان رسمی، نهاد تجاری ثبت‌شده، رسانه یا شرکت تاییدشده بین‌المللی)',
+        redFlags: [
+          customNote ? `• برچسب رسمی سازمان: ${customNote}` : null,
+          '• دارای نشان تایید طلایی (Gold Checkmark / Verified Organization) در توییتر/اکس که منحصراً به شرکت‌های رسمی، سازمان‌های معتبر تجاری، موسسات و نهادهای ثبت‌شده تعلق می‌گیرد.',
+          '• این اکانت یک حساب کاربری عادی یا سایبری نیست، بلکه متعلق به یک سازمان، برند، رسانه یا نهاد حقوقی تاییدشده است.'
+        ].filter(Boolean).join('\n'),
+        verdict: '🏢 حساب رسمی شرکت یا سازمان تاییدشده (تیک طلایی)؛ این هویت حقوقی به عنوان یک نهاد تجاری/سازمانی رسمی ثبت شده و از دایره ارتش‌های سایبری، اکانت‌های پوششی یا ترول‌ها کاملاً خارج است.',
+        modelTag: 'Verified Organization (سازمان رسمی و شرکت ثبت‌شده / تیک طلایی)',
+        isMekAlert: false,
+        isFalseFlag: false
+      };
+    }
     case 'diplomatic':
       return {
         identity: `🌐 نهاد رسمی دیپلماتیک و دولتی خارجی${label}`,
@@ -1694,6 +1710,7 @@ function inferFactionFromAnalysisText(analysisText, isMekAlert = false, isFalseF
   if (idLine.includes('چپ') || idLine.includes('چپول') || idLine.includes('۵۷ی')) return 'chapi';
   if (idLine.includes('پهلوی') || idLine.includes('ملی‌گرا') || idLine.includes('پادشاهی') || idLine.includes('شهبانو') || idLine.includes('مراد ویسی') || idLine.includes('مشروطه')) return 'pahlavi';
   if (idLine.includes('تیک خاکستری') || idLine.includes('نشان تایید خاکستری') || idLine.includes('حساب رسمی دولتی')) return 'government';
+  if (idLine.includes('تیک طلایی') || idLine.includes('نشان تایید طلایی') || idLine.includes('سازمان رسمی') || idLine.includes('شرکت رسمی') || idLine.includes('شرکت ثبت‌شده') || idLine.includes('نهاد تجاری') || idLine.includes('organization')) return 'organization';
   if (idLine.includes('دیپلماتیک') || idLine.includes('وزارت امور خارجه')) return 'diplomatic';
   if (
     idLine.includes('روزنامه‌نگار') ||
@@ -2138,9 +2155,12 @@ async function harvestRemoteProfileViaBackgroundTab(rawHandle) {
       quotedInteractions: bestSnap.quotedInteractions || [],
       tweetsSample: bestSnap.tweetsSample || '',
       isVerified: Boolean(bestSnap.isVerified),
-      isGreyBadge: Boolean(bestSnap.isGreyBadge && (bestSnap.verifiedType === 'Government' || (bestSnap.governmentLabel && /government|state-affiliated|دولتی|حاکمیتی/i.test(bestSnap.governmentLabel)))),
-      verifiedType: (bestSnap.verifiedType === 'Government' && !bestSnap.isGreyBadge) ? '' : (bestSnap.verifiedType || ''),
-      governmentLabel: bestSnap.governmentLabel || ''
+      isGreyBadge: Boolean(bestSnap.isGreyBadge || bestSnap.verifiedType === 'Government'),
+      isGoldBadge: Boolean(bestSnap.isGoldBadge || bestSnap.verifiedType === 'Business'),
+      verifiedType: (bestSnap.isGreyBadge || bestSnap.verifiedType === 'Government')
+        ? 'Government'
+        : ((bestSnap.isGoldBadge || bestSnap.verifiedType === 'Business') ? 'Business' : (bestSnap.verifiedType || '')),
+      governmentLabel: bestSnap.governmentLabel || (bestSnap.isGreyBadge ? 'حساب رسمی دولتی / حاکمیتی' : (bestSnap.isGoldBadge ? 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)' : ''))
     };
   })();
 
@@ -2175,14 +2195,18 @@ async function enrichAccountWithHistoricalTimeline(accountInfo) {
     const entry = allCache[rawHandle];
     if (entry && (Date.now() - (entry.ts || 0)) < CACHE_TTL_MS && ((entry.tweets && entry.tweets.length >= 3) || entry.bio)) {
       const isStrictEntryGov = Boolean(
-        entry.isGreyBadge &&
-        (entry.verifiedType === 'Government' ||
-         (entry.governmentLabel && /government|state-affiliated|دولتی|حاکمیتی/i.test(entry.governmentLabel)))
+        Boolean(entry.isGreyBadge) ||
+        entry.verifiedType === 'Government'
+      );
+      const isStrictEntryGold = (!isStrictEntryGov) && Boolean(
+        Boolean(entry.isGoldBadge) ||
+        entry.verifiedType === 'Business'
       );
       cachedTimeline = {
         ...entry,
         isGreyBadge: isStrictEntryGov,
-        verifiedType: isStrictEntryGov ? 'Government' : (entry.verifiedType === 'Government' ? '' : (entry.verifiedType || ''))
+        isGoldBadge: isStrictEntryGold,
+        verifiedType: isStrictEntryGov ? 'Government' : (isStrictEntryGold ? 'Business' : (entry.verifiedType || ''))
       };
     } else {
       // Also check if xrayAccountHistory already has >= 5 stored tweets for this handle
@@ -2191,9 +2215,12 @@ async function enrichAccountWithHistoricalTimeline(accountInfo) {
         const storedTweetList = Object.values(histRecord.tweets);
         if (storedTweetList.length >= 5) {
           const isStrictGovHist = Boolean(
-            histRecord.isGreyBadge &&
-            (histRecord.verifiedType === 'Government' ||
-             (histRecord.governmentLabel && /government|state-affiliated|دولتی|حاکمیتی/i.test(histRecord.governmentLabel)))
+            Boolean(histRecord.isGreyBadge) ||
+            histRecord.verifiedType === 'Government'
+          );
+          const isStrictGoldHist = (!isStrictGovHist) && Boolean(
+            Boolean(histRecord.isGoldBadge) ||
+            histRecord.verifiedType === 'Business'
           );
           cachedTimeline = {
             ts: Date.now(),
@@ -2208,8 +2235,11 @@ async function enrichAccountWithHistoricalTimeline(accountInfo) {
             hashtags: Object.values(histRecord.hashtags || {}),
             isVerified: Boolean(histRecord.isVerified),
             isGreyBadge: isStrictGovHist,
-            verifiedType: isStrictGovHist ? 'Government' : (histRecord.verifiedType === 'Government' ? '' : (histRecord.verifiedType || '')),
-            governmentLabel: isStrictGovHist ? (histRecord.governmentLabel || '') : ''
+            isGoldBadge: isStrictGoldHist,
+            verifiedType: isStrictGovHist ? 'Government' : (isStrictGoldHist ? 'Business' : (histRecord.verifiedType || '')),
+            governmentLabel: isStrictGovHist
+              ? (histRecord.governmentLabel || 'حساب رسمی دولتی / حاکمیتی')
+              : (isStrictGoldHist ? 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)' : '')
           };
         }
       }
@@ -2254,16 +2284,21 @@ async function enrichAccountWithHistoricalTimeline(accountInfo) {
     merged.followingRaw = cachedTimeline.followingRaw;
   }
   const isStrictTimelineGov = Boolean(
-    cachedTimeline.isGreyBadge &&
-    (cachedTimeline.verifiedType === 'Government' ||
-     (cachedTimeline.governmentLabel && /government|state-affiliated|دولتی|حاکمیتی/i.test(cachedTimeline.governmentLabel)))
+    Boolean(cachedTimeline.isGreyBadge) ||
+    cachedTimeline.verifiedType === 'Government'
+  );
+  const isStrictTimelineGold = (!isStrictTimelineGov) && Boolean(
+    Boolean(cachedTimeline.isGoldBadge) ||
+    cachedTimeline.verifiedType === 'Business'
   );
   if (isStrictTimelineGov) {
     merged.isGreyBadge = true;
     merged.verifiedType = 'Government';
-    if (cachedTimeline.governmentLabel) {
-      merged.governmentLabel = cachedTimeline.governmentLabel;
-    }
+    merged.governmentLabel = cachedTimeline.governmentLabel || 'حساب رسمی دولتی / حاکمیتی';
+  } else if (isStrictTimelineGold) {
+    merged.isGoldBadge = true;
+    merged.verifiedType = 'Business';
+    merged.governmentLabel = cachedTimeline.governmentLabel || 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)';
   }
   if (!merged.metadata && (merged.followersRaw || merged.followingRaw)) {
     const parts = [];
@@ -2645,16 +2680,18 @@ function evaluateAccountAlignment(accountInfo, customAccountsMap = {}, options =
   // and are NOT Iranian regime entities belong to this category!
   const isStrictGovAccount = Boolean(
     !isIranianRegimeOfficial(accountInfo) &&
-    accountInfo.isGreyBadge &&
-    (accountInfo.verifiedType === 'Government' ||
-     (accountInfo.governmentLabel && /government|state-affiliated|دولتی|حاکمیتی/i.test(accountInfo.governmentLabel)))
+    (
+      Boolean(accountInfo.isGreyBadge) ||
+      accountInfo.verifiedType === 'Government' ||
+      /تیک خاکستری|حساب رسمی دولتی|government\s*official/i.test(accountInfo.governmentLabel || '')
+    )
   );
 
   if (isStrictGovAccount) {
     const govReport = buildStandardFactionReport(
       'government',
       displayName || username,
-      accountInfo.governmentLabel
+      accountInfo.governmentLabel || 'حساب رسمی دولتی / حاکمیتی (تیک خاکستری)'
     );
     return {
       report: govReport,
@@ -2662,6 +2699,33 @@ function evaluateAccountAlignment(accountInfo, customAccountsMap = {}, options =
       isMekAlert: false,
       isFalseFlag: false,
       isGovernment: true
+    };
+  }
+
+  // 0c. Official Organizations & Registered Businesses (Genuine Gold Checkmark ONLY)
+  // Accounts that genuinely have verified Gold Badge (Business/Organization) and are NOT Iranian regime entities
+  const isStrictGoldAccount = Boolean(
+    !isStrictGovAccount &&
+    !isIranianRegimeOfficial(accountInfo) &&
+    (
+      Boolean(accountInfo.isGoldBadge) ||
+      accountInfo.verifiedType === 'Business' ||
+      /تیک طلایی|سازمان رسمی|شرکت ثبت‌شده|verified organization|business/i.test(accountInfo.governmentLabel || '')
+    )
+  );
+
+  if (isStrictGoldAccount) {
+    const goldReport = buildStandardFactionReport(
+      'organization',
+      displayName || username,
+      accountInfo.governmentLabel || 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)'
+    );
+    return {
+      report: goldReport,
+      model: 'Verified Organization (تیک طلایی سازمان‌ها و شرکت‌های رسمی)',
+      isMekAlert: false,
+      isFalseFlag: false,
+      isGoldBadge: true
     };
   }
 
@@ -4114,21 +4178,35 @@ ${rep.redFlags}
 
   const isStrictEnrichedGov = Boolean(
     !isIranianRegimeOfficial(enrichedAccountInfo) &&
-    enrichedAccountInfo.isGreyBadge &&
-    (enrichedAccountInfo.verifiedType === 'Government' ||
-     (enrichedAccountInfo.governmentLabel && /government|state-affiliated|دولتی|حاکمیتی/i.test(enrichedAccountInfo.governmentLabel)))
+    (
+      Boolean(enrichedAccountInfo.isGreyBadge) ||
+      enrichedAccountInfo.verifiedType === 'Government' ||
+      /تیک خاکستری|حساب رسمی دولتی/i.test(enrichedAccountInfo.governmentLabel || '')
+    )
+  );
+
+  const isStrictEnrichedGold = Boolean(
+    !isStrictEnrichedGov &&
+    !isIranianRegimeOfficial(enrichedAccountInfo) &&
+    (
+      Boolean(enrichedAccountInfo.isGoldBadge) ||
+      enrichedAccountInfo.verifiedType === 'Business' ||
+      /تیک طلایی|سازمان رسمی|شرکت ثبت‌شده|verified organization/i.test(enrichedAccountInfo.governmentLabel || '')
+    )
   );
 
   let verificationText = 'عادی';
   if (isStrictEnrichedGov) {
     verificationText = '🏛️ نشان رسمی خاکستری دولتی خارجی (Grey Checkmark - حساب رسمی دولتها یا نهادهای بین‌المللی)';
+  } else if (isStrictEnrichedGold) {
+    verificationText = '🏢 نشان رسمی طلایی سازمان‌ها و شرکت‌های ثبت‌شده (Gold Checkmark - Verified Organization)';
   } else if (enrichedAccountInfo.isVerified) {
     verificationText = isIranianRegimeOfficial(enrichedAccountInfo)
-      ? '🔷 تیک آبی تجاری/عادی (فاقد نشان خاکستری دولتی)'
+      ? '🔷 تیک آبی تجاری/عادی (فاقد نشان خاکستری دولتی یا طلایی سازمانی)'
       : '✅ تایید شده (دارای نشان رسمی Verified / تیک آبی)';
   }
-  const govLabelText = (isStrictEnrichedGov && enrichedAccountInfo.governmentLabel)
-    ? `\n- برچسب رسمی دولتی توییتر/اکس: ${enrichedAccountInfo.governmentLabel}`
+  const govLabelText = ((isStrictEnrichedGov || isStrictEnrichedGold) && enrichedAccountInfo.governmentLabel)
+    ? `\n- برچسب رسمی توییتر/اکس: ${enrichedAccountInfo.governmentLabel}`
     : '';
 
   const handlesText = (enrichedAccountInfo.referencedHandles && enrichedAccountInfo.referencedHandles.length > 0)

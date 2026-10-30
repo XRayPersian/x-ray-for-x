@@ -7,7 +7,7 @@
 ---
 
 ### 🌐 Language / زبان
-* [🦁☀️ راهنمای فارسی (Persian Guide)](#-راهنمای-فارسی)
+* [🦁☀️ راهنمای فارسی (Persian Guide)](#️-راهنمای-فارسی)
 * [🇬🇧 English Guide](#-english-guide)
 
 ---

@@ -922,6 +922,32 @@
   margin-top: 10px;
 }
 
+/* 4c. Official Organizations & Businesses (Gold Checkmark) */
+.xray-account-box.xray-gold-box {
+  background: linear-gradient(145deg, #241d08 0%, #171203 100%) !important;
+  border-right: 4px solid #ffd400 !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 212, 0, 0.25) !important;
+}
+
+.xray-gold-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #ffd400 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.xray-badge-gold {
+  background: rgba(255, 212, 0, 0.2) !important;
+  color: #fef08a !important;
+  border: 1px solid #ffd400 !important;
+  font-weight: 800 !important;
+}
+
+.xray-mb-gold {
+  background: rgba(255, 212, 0, 0.18) !important;
+  color: #ffd400 !important;
+  border: 1px solid rgba(255, 212, 0, 0.45) !important;
+}
+
 /* 5. Authentic Media & Independent Journalists */
 .xray-account-box.xray-media-box {
   background: linear-gradient(145deg, #0d1d17 0%, #081410 100%) !important;
