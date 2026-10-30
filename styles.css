@@ -1,0 +1,1369 @@
+/**
+ * styles.css - Stylesheet for "Account Check for X"
+ * Optimized for X.com Dark Mode (#000000) and Dimmed Mode (#15202b).
+ * Cyber forensic aesthetic with amber and cyan accents.
+ */
+
+/* ==========================================================================
+   1. TRIGGER BUTTON (Inside X Action Bar)
+   ========================================================================== */
+
+.xray-action-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  user-select: none;
+}
+
+.xray-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  height: 28px;
+  border-radius: 9999px;
+  background: rgba(0, 242, 254, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  color: #00f2fe;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  line-height: 1;
+}
+
+.xray-trigger-btn:hover:not(:disabled) {
+  background: rgba(0, 242, 254, 0.18);
+  border-color: #00f2fe;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.35);
+  transform: translateY(-0.5px);
+}
+
+.xray-trigger-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  background: rgba(0, 242, 254, 0.25);
+}
+
+.xray-trigger-btn:disabled {
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.xray-trigger-btn.xray-btn-active {
+  background: rgba(0, 242, 254, 0.16);
+  border-color: #00f2fe;
+  color: #00f2fe;
+}
+
+/* Forensic Account & Bot Check Button */
+.xray-bot-btn {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.xray-bot-btn .xray-btn-icon {
+  filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5));
+}
+
+.xray-bot-btn:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+  transform: translateY(-0.5px);
+}
+
+.xray-bot-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  background: rgba(245, 158, 11, 0.25);
+}
+
+.xray-bot-btn.xray-btn-active {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+.xray-bot-btn .xray-spinner,
+.xray-spinner-amber {
+  border-color: rgba(245, 158, 11, 0.3);
+  border-top-color: #f59e0b;
+}
+
+.xray-btn-icon {
+  font-size: 13px;
+  filter: drop-shadow(0 0 2px rgba(0, 242, 254, 0.5));
+}
+
+.xray-btn-label {
+  letter-spacing: 0.2px;
+}
+
+/* Spinner inside button */
+.xray-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(0, 242, 254, 0.3);
+  border-top-color: #00f2fe;
+  border-radius: 50%;
+  animation: xray-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes xray-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   2. RESULT BOX CONTAINER
+   ========================================================================== */
+
+.xray-result-box {
+  margin: 10px 0 14px 0;
+  padding: 14px 16px;
+  background: #16181c;
+  background: linear-gradient(145deg, #16181c 0%, #111317 100%);
+  border: 1px solid #2f3336;
+  border-left: 3.5px solid #00f2fe;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 242, 254, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #e7e9ea;
+  font-size: 13.5px;
+  line-height: 1.55;
+  animation: xray-slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative;
+  overflow: visible;
+  box-sizing: border-box;
+  clear: both;
+}
+
+.xray-result-box.xray-fade-out {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: all 0.2s ease-in-out;
+}
+
+@keyframes xray-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   3. RESULT HEADER
+   ========================================================================== */
+
+.xray-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.xray-title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.xray-header-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 4px #00f2fe);
+}
+
+.xray-header-title {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ffffff 0%, #00f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.xray-header-model {
+  font-size: 10.5px;
+  font-weight: 600;
+  background: rgba(0, 242, 254, 0.12);
+  color: #00f2fe;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  letter-spacing: 0.3px;
+}
+
+.xray-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.xray-icon-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #71767b;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.xray-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.xray-close-btn {
+  padding: 3px 7px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.xray-close-btn:hover {
+  background: rgba(244, 33, 46, 0.2);
+  color: #f4212e;
+  border-color: rgba(244, 33, 46, 0.4);
+}
+
+.xray-btn-success {
+  color: #00ba7c !important;
+  border-color: rgba(0, 186, 124, 0.4) !important;
+  background: rgba(0, 186, 124, 0.15) !important;
+}
+
+/* ==========================================================================
+   4. SCANNER / LOADING ANIMATION
+   ========================================================================== */
+
+.xray-scanner-container {
+  padding: 16px 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.xray-scanner-beam {
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent 0%, #00f2fe 50%, transparent 100%);
+  box-shadow: 0 0 12px #00f2fe;
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: xray-scan-beam 1.6s ease-in-out infinite alternate;
+}
+
+.xray-scanner-beam.xray-beam-amber {
+  background: linear-gradient(90deg, transparent 0%, #f59e0b 50%, transparent 100%);
+  box-shadow: 0 0 12px #f59e0b;
+}
+
+@keyframes xray-scan-beam {
+  0% { top: 0%; opacity: 0.4; }
+  100% { top: 100%; opacity: 1; }
+}
+
+.xray-loading-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #00f2fe;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.xray-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00f2fe;
+  box-shadow: 0 0 8px #00f2fe;
+  animation: xray-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes xray-pulse {
+  from { opacity: 0.3; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.2); }
+}
+
+/* ==========================================================================
+   5. RESULT CONTENT SECTIONS (🎯, 🔍, 💀)
+   ========================================================================== */
+
+.xray-section {
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  transition: background 0.15s ease;
+}
+
+.xray-section:last-child {
+  margin-bottom: 0;
+}
+
+.xray-section:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.xray-section-label {
+  margin-bottom: 5px;
+}
+
+.xray-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+
+.xray-section-text {
+  color: #d9d9d9;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+
+.xray-p-gap {
+  height: 6px;
+}
+
+.xray-raw-analysis {
+  color: #e7e9ea;
+  white-space: pre-wrap;
+}
+
+/* ==========================================================================
+   6. ERROR STATE
+   ========================================================================== */
+
+.xray-result-box.xray-error-state {
+  border-left-color: #f4212e;
+}
+
+.xray-error-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 4px;
+}
+
+.xray-error-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.xray-error-title {
+  font-weight: 700;
+  color: #f4212e;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.xray-error-desc {
+  color: #e7e9ea;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.xray-error-hint {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 242, 254, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  border-radius: 6px;
+  color: #00f2fe;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.xray-error-hint strong {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   7. RTL SUPPORT (PERSIAN / FARSI)
+   ========================================================================== */
+
+.xray-result-box.xray-rtl {
+  direction: rtl;
+  text-align: right;
+  border-left: 1px solid #2f3336;
+  border-right: 3.5px solid #00f2fe;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 242, 254, 0.08);
+}
+
+.xray-rtl .xray-result-header {
+  flex-direction: row;
+}
+
+.xray-rtl .xray-title-area {
+  flex-direction: row;
+}
+
+.xray-rtl .xray-header-actions {
+  flex-direction: row;
+}
+
+.xray-rtl .xray-section {
+  border-left: none;
+  border-right: 2px solid transparent;
+}
+
+.xray-rtl .xray-section-text {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Vazirmatn, Arial, sans-serif;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.xray-rtl .xray-badge {
+  letter-spacing: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Vazirmatn, Arial, sans-serif;
+}
+
+.xray-rtl .xray-error-notice {
+  flex-direction: row;
+}
+
+/* ==========================================================================
+   8. ACCOUNT X-RAY & BOT SCOUT (🕵️)
+   ========================================================================== */
+
+.xray-account-box {
+  border-right: 3.5px solid #f59e0b !important;
+  border-left: 1px solid #2f3336 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 14px rgba(245, 158, 11, 0.12) !important;
+}
+
+.xray-badge-account {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+.xray-account-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 580px) {
+  .xray-account-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.xray-section-identity {
+  border-right-color: #a855f7 !important;
+  background: rgba(168, 85, 247, 0.05);
+}
+
+.xray-badge-identity {
+  background: rgba(168, 85, 247, 0.18);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.xray-identity-text {
+  color: #f1f5f9;
+}
+
+.xray-section-prob {
+  border-right-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.xray-prob-text {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.xray-risk-high {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #f87171 !important;
+  border: 1px solid #ef4444 !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  font-weight: 800;
+}
+
+.xray-risk-med {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+  border: 1px solid #f59e0b !important;
+  font-weight: 700;
+}
+
+.xray-risk-low {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  border: 1px solid #10b981 !important;
+  font-weight: 700;
+}
+
+.xray-section-flags {
+  border-right-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.03);
+}
+
+.xray-badge-flags {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.xray-section-verdict {
+  border-right-color: #00f2fe !important;
+  background: rgba(0, 242, 254, 0.05);
+}
+
+.xray-badge-verdict {
+  background: rgba(0, 242, 254, 0.2);
+  color: #00f2fe;
+  border: 1px solid #00f2fe;
+  box-shadow: 0 0 8px rgba(0, 242, 254, 0.2);
+}
+
+.xray-verdict-highlight {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+.xray-verdict-highlight strong {
+  color: #00f2fe;
+}
+
+/* Profile Page Scanner Container & Button */
+.xray-profile-scan-container {
+  margin: 14px 0 16px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.xray-profile-scan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(168, 85, 247, 0.16) 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Vazirmatn, Arial, sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.xray-profile-scan-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(168, 85, 247, 0.3) 100%);
+  border-color: #fbbf24;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
+}
+
+.xray-profile-scan-btn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.xray-profile-scan-btn:disabled {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+/* ==========================================================================
+   9. MEK CULT & TERRORIST THREAT RADAR STYLING (🚨)
+   ========================================================================== */
+
+.xray-account-box.xray-mek-alert-box {
+  background: linear-gradient(145deg, #1d0f11 0%, #14080a 100%) !important;
+  border: 1px solid #7f1d1d !important;
+  border-right: 4px solid #dc2626 !important;
+  border-left: 1px solid #7f1d1d !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 24px rgba(220, 38, 38, 0.35) !important;
+  animation: xray-mek-pulse 3s infinite alternate ease-in-out;
+}
+
+@keyframes xray-mek-pulse {
+  0% {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(220, 38, 38, 0.25);
+  }
+  100% {
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7), 0 0 28px rgba(220, 38, 38, 0.45);
+  }
+}
+
+.xray-mek-alert-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #f87171 70%, #dc2626 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  letter-spacing: 0.3px;
+}
+
+.xray-badge-mek {
+  background: rgba(220, 38, 38, 0.25) !important;
+  color: #fca5a5 !important;
+  border: 1px solid #ef4444 !important;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.35) !important;
+  font-weight: 800 !important;
+}
+
+.xray-section-mek {
+  border-right-color: #dc2626 !important;
+  background: rgba(220, 38, 38, 0.07) !important;
+}
+
+.xray-mek-text {
+  color: #fef2f2 !important;
+  font-weight: 700 !important;
+}
+
+.xray-mek-desc {
+  color: #fee2e2 !important;
+  line-height: 1.7 !important;
+}
+
+.xray-section-mek-verdict {
+  border-right: 3px solid #dc2626 !important;
+  background: rgba(220, 38, 38, 0.12) !important;
+  border: 1px solid rgba(220, 38, 38, 0.35) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+.xray-mek-verdict-highlight {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 14.5px !important;
+  line-height: 1.75 !important;
+}
+
+.xray-mek-verdict-highlight strong {
+  color: #fca5a5 !important;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   10. POLITICAL FACTION STYLES (ARZESHI, ESLAHTALAB, CHAPI, PAHLAVI, MEDIA)
+   ========================================================================== */
+
+/* 1. Arzeshi / Regime Supporters (Category 3-A) */
+.xray-account-box.xray-arzeshi-box {
+  background: linear-gradient(145deg, #1f1113 0%, #15090b 100%) !important;
+  border-right: 4px solid #ef4444 !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 16px rgba(239, 68, 68, 0.25) !important;
+}
+
+.xray-arzeshi-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #f87171 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.xray-badge-arzeshi {
+  background: rgba(239, 68, 68, 0.22) !important;
+  color: #f87171 !important;
+  border: 1px solid #ef4444 !important;
+  font-weight: 800 !important;
+}
+
+.xray-section-arzeshi {
+  border-right-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.06) !important;
+}
+
+.xray-section-arzeshi-verdict {
+  border-right: 3px solid #ef4444 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+/* 2. Eslahtalab / Reformist (Category 3-B) */
+.xray-account-box.xray-eslahtalab-box {
+  background: linear-gradient(145deg, #1b160e 0%, #13100a 100%) !important;
+  border-right: 4px solid #f59e0b !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 16px rgba(245, 158, 11, 0.2) !important;
+}
+
+.xray-eslahtalab-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #fbbf24 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.xray-badge-eslahtalab {
+  background: rgba(245, 158, 11, 0.22) !important;
+  color: #fbbf24 !important;
+  border: 1px solid #f59e0b !important;
+  font-weight: 800 !important;
+}
+
+.xray-section-eslahtalab {
+  border-right-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.05) !important;
+}
+
+.xray-section-eslahtalab-verdict {
+  border-right: 3px solid #f59e0b !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+/* Separatist / Ethnic Movements (Category 5) */
+.xray-account-box.xray-separatist-box {
+  background: linear-gradient(145deg, #1c100e 0%, #130a08 100%) !important;
+  border-right: 4px solid #f97316 !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 18px rgba(249, 115, 22, 0.25) !important;
+}
+
+.xray-separatist-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #fb923c 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.xray-badge-separatist {
+  background: rgba(249, 115, 22, 0.22) !important;
+  color: #fdba74 !important;
+  border: 1px solid #f97316 !important;
+  font-weight: 800 !important;
+}
+
+.xray-section-separatist {
+  border-right-color: #f97316 !important;
+  background: rgba(249, 115, 22, 0.06) !important;
+}
+
+.xray-section-separatist-verdict {
+  border-right: 3px solid #f97316 !important;
+  background: rgba(249, 115, 22, 0.1) !important;
+  border: 1px solid rgba(249, 115, 22, 0.3) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+/* 3. Chapi / Leftist (Category 2) */
+.xray-account-box.xray-chapi-box {
+  background: linear-gradient(145deg, #170f1e 0%, #100a16 100%) !important;
+  border-right: 4px solid #a855f7 !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 16px rgba(168, 85, 247, 0.2) !important;
+}
+
+.xray-chapi-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #c084fc 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.xray-badge-chapi {
+  background: rgba(168, 85, 247, 0.22) !important;
+  color: #c084fc !important;
+  border: 1px solid #a855f7 !important;
+  font-weight: 800 !important;
+}
+
+.xray-section-chapi {
+  border-right-color: #a855f7 !important;
+  background: rgba(168, 85, 247, 0.06) !important;
+}
+
+.xray-section-chapi-verdict {
+  border-right: 3px solid #a855f7 !important;
+  background: rgba(168, 85, 247, 0.1) !important;
+  border: 1px solid rgba(168, 85, 247, 0.3) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+/* 4. Pahlavi / Nationalist (Category 1) */
+.xray-account-box.xray-pahlavi-box {
+  background: linear-gradient(145deg, #0d1a24 0%, #09131a 100%) !important;
+  border-right: 4px solid #00f2fe !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 242, 254, 0.25) !important;
+}
+
+.xray-pahlavi-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #00f2fe 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.xray-badge-pahlavi {
+  background: rgba(0, 242, 254, 0.2) !important;
+  color: #00f2fe !important;
+  border: 1px solid #00f2fe !important;
+  font-weight: 800 !important;
+}
+
+.xray-section-pahlavi {
+  border-right-color: #00f2fe !important;
+  background: rgba(0, 242, 254, 0.06) !important;
+}
+
+.xray-section-pahlavi-verdict {
+  border-right: 3px solid #00f2fe !important;
+  background: rgba(0, 242, 254, 0.1) !important;
+  border: 1px solid rgba(0, 242, 254, 0.35) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+/* 6. Diplomatic & Foreign Government Entities (🌐) */
+.xray-account-box.xray-diplomatic-box {
+  background: linear-gradient(145deg, #0c1a2e 0%, #081220 100%) !important;
+  border-right: 4px solid #38bdf8 !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.22) !important;
+}
+
+.xray-diplomatic-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #7dd3fc 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.xray-badge-diplomatic {
+  background: rgba(56, 189, 248, 0.2) !important;
+  color: #7dd3fc !important;
+  border: 1px solid #38bdf8 !important;
+  font-weight: 800 !important;
+}
+
+.xray-section-diplomatic {
+  border-right-color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.06) !important;
+}
+
+.xray-section-diplomatic-verdict {
+  border-right: 3px solid #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.1) !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+/* 4b. Official Government Accounts (Grey Checkmark) */
+.xray-account-box.xray-government-box {
+  background: linear-gradient(145deg, #182230 0%, #0f172a 100%) !important;
+  border-right: 4px solid #94a3b8 !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 16px rgba(148, 163, 184, 0.25) !important;
+}
+
+.xray-government-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #cbd5e1 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.xray-badge-government {
+  background: rgba(148, 163, 184, 0.2) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #94a3b8 !important;
+  font-weight: 800 !important;
+}
+
+.xray-section-government {
+  border-right-color: #94a3b8 !important;
+  background: rgba(148, 163, 184, 0.06) !important;
+}
+
+.xray-section-government-verdict {
+  border-right: 3px solid #94a3b8 !important;
+  background: rgba(148, 163, 184, 0.1) !important;
+  border: 1px solid rgba(148, 163, 184, 0.3) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+/* 5. Authentic Media & Independent Journalists */
+.xray-account-box.xray-media-box {
+  background: linear-gradient(145deg, #0d1d17 0%, #081410 100%) !important;
+  border-right: 4px solid #10b981 !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 16px rgba(16, 185, 129, 0.2) !important;
+}
+
+.xray-media-box .xray-header-title {
+  background: linear-gradient(90deg, #ffffff 0%, #34d399 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.xray-badge-media {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  border: 1px solid #10b981 !important;
+  font-weight: 800 !important;
+}
+
+.xray-section-media {
+  border-right-color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.06) !important;
+}
+
+.xray-section-media-verdict {
+  border-right: 3px solid #10b981 !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+/* ==========================================================================
+   FACTION AVATAR & VISUAL ICON ENHANCEMENTS
+   ========================================================================== */
+
+.xray-faction-avatar-header {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+  vertical-align: middle;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: zoom-in !important;
+}
+
+.xray-faction-avatar-header:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 14px #00f2fe;
+}
+
+.xray-identity-with-avatar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-top: 4px !important;
+  direction: rtl !important;
+}
+
+.xray-identity-text-col {
+  flex: 1 !important;
+  text-align: right !important;
+  min-width: 0 !important;
+}
+
+.xray-faction-avatar-thumb {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 10px !important;
+  object-fit: cover !important;
+  border: 2px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease !important;
+  cursor: zoom-in !important;
+}
+
+.xray-faction-avatar-thumb:hover {
+  transform: scale(1.1);
+  border-color: #00f2fe !important;
+  box-shadow: 0 4px 18px rgba(0, 242, 254, 0.55) !important;
+}
+
+/* ==========================================================================
+   X-RAY IMAGE LIGHTBOX (ORIGINAL SIZE MODAL)
+   ========================================================================== */
+
+.xray-image-lightbox {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  box-sizing: border-box !important;
+  animation: xrayLightboxFadeIn 0.22s ease-out forwards !important;
+  cursor: zoom-out !important;
+}
+
+.xray-image-lightbox.xray-lightbox-closing {
+  animation: xrayLightboxFadeOut 0.2s ease-in forwards !important;
+}
+
+.xray-lightbox-content {
+  position: relative !important;
+  max-width: 90vw !important;
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: default !important;
+  animation: xrayLightboxZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.xray-lightbox-img {
+  max-width: 85vw !important;
+  max-height: 80vh !important;
+  object-fit: contain !important;
+  border-radius: 16px !important;
+  border: 2px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 242, 254, 0.35) !important;
+  background-color: #0b0f19 !important;
+  display: block !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+
+.xray-lightbox-close {
+  position: absolute !important;
+  top: -14px !important;
+  right: -14px !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+  color: #fff !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease !important;
+  z-index: 10 !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+}
+
+.xray-lightbox-close:hover {
+  transform: scale(1.15) !important;
+  background: #ef4444 !important;
+  border-color: #fca5a5 !important;
+}
+
+.xray-lightbox-caption {
+  margin-top: 14px !important;
+  color: #f1f5f9 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Vazirmatn", Tahoma, sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  background: rgba(15, 23, 42, 0.9) !important;
+  padding: 7px 18px !important;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+  max-width: 80vw !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+@keyframes xrayLightboxFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes xrayLightboxFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes xrayLightboxZoomIn {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   HEADER DROPDOWN MENU, FEEDBACK & IMAGE COPY CONTROLS
+   ========================================================================== */
+
+.xray-dropdown-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.xray-img-copy-btn,
+.xray-dropdown-toggle-btn {
+  padding: 3px 7px !important;
+  font-size: 12px !important;
+  border-radius: 6px !important;
+}
+
+.xray-img-copy-btn:hover {
+  background: rgba(56, 189, 248, 0.18) !important;
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  color: #38bdf8 !important;
+}
+
+.xray-dropdown-toggle-btn:hover {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  color: #fbbf24 !important;
+}
+
+.xray-faction-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 215px;
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.75);
+  z-index: 9999;
+  direction: rtl;
+  text-align: right;
+  backdrop-filter: blur(12px);
+}
+
+.xray-faction-dropdown-menu.xray-dropdown-open {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.xray-dropdown-header {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  padding: 4px 8px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 2px;
+}
+
+.xray-dropdown-item {
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: right;
+  direction: rtl;
+  transition: background 0.15s ease, color 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.xray-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.xray-dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 3px 0;
+}
+
+.xray-dropdown-reset {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   HANDLE-CHANGE WARNING BANNER (PERMANENT REST_ID TRACKER)
+   ========================================================================== */
+
+.xray-handle-change-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-radius: 9px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  direction: rtl;
+  text-align: right;
+  color: #fef08a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.xray-hc-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.xray-hc-old {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #f87171;
+  font-weight: 700;
+  direction: ltr;
+  display: inline-block;
+}
+
+/* ==========================================================================
+   AUTOMATIC TIMELINE MINI-BADGES (NEXT TO @USERNAME)
+   ========================================================================== */
+
+.xray-mini-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Tahoma, sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 1.5px 7px;
+  border-radius: 9999px;
+  margin: 0 5px;
+  cursor: pointer;
+  vertical-align: middle;
+  direction: rtl;
+  white-space: nowrap;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  user-select: none;
+}
+
+.xray-mini-badge:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.15);
+}
+
+.xray-mb-pahlavi {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
+}
+
+.xray-mb-mek {
+  background: rgba(239, 68, 68, 0.22);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.25);
+}
+
+.xray-mb-arzeshi {
+  background: rgba(220, 38, 38, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #f87171;
+}
+
+.xray-mb-eslahtalab {
+  background: rgba(234, 179, 8, 0.16);
+  border: 1px solid rgba(234, 179, 8, 0.45);
+  color: #fde047;
+}
+
+.xray-mb-chapi {
+  background: rgba(168, 85, 247, 0.18);
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  color: #c084fc;
+}
+
+.xray-mb-separatist {
+  background: rgba(153, 27, 27, 0.25);
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  color: #fda4af;
+}
+
+.xray-mb-falseflag {
+  background: rgba(249, 115, 22, 0.18);
+  border: 1px solid rgba(249, 115, 22, 0.5);
+  color: #fdba74;
+}
+
+.xray-mb-gov {
+  background: rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: #cbd5e1;
+}
+
+.xray-mb-media {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.xray-mb-suspicious {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+}
+
+.xray-mb-citizen {
+  background: rgba(148, 163, 184, 0.14);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #e2e8f0;
+}
+
+.xray-mb-rename-tag {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fde047;
+  padding: 0 5px;
+  border-radius: 9999px;
+  font-size: 9.5px;
+  margin-right: 3px;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+

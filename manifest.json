@@ -1,0 +1,72 @@
+{
+  "manifest_version": 3,
+  "name": "X-Ray: Account Check for X",
+  "version": "1.0.0",
+  "description": "کالبدشکافی اصالت اکانت، سابقه فعالیت و کشف حساب‌های سایبری و بات در x.com",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://*.x.com/*",
+    "https://twitter.com/*",
+    "https://*.twitter.com/*",
+    "https://syndication.twitter.com/*",
+    "https://api.groq.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "X-Ray: Account Check",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*"
+      ],
+      "js": [
+        "page_sniffer.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/factions/*",
+        "icons/*"
+      ],
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*"
+      ]
+    }
+  ]
+}
