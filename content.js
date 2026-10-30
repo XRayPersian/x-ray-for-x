@@ -62,61 +62,125 @@
   /**
    * Check if author has an official Grey Badge (Government / State Authority / Multilateral Org)
    * Strictly detects official grey checkmark accounts on X.
+  function parseColorToRgb(str) {
+    if (!str || typeof str !== 'string') return null;
+    const s = str.trim();
+    if (!s || s === 'none' || s === 'transparent' || s === 'inherit' || s === 'currentcolor') return null;
+    const rgbMatch = s.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+    if (rgbMatch) {
+      return { r: parseInt(rgbMatch[1], 10), g: parseInt(rgbMatch[2], 10), b: parseInt(rgbMatch[3], 10) };
+    }
+    const hex6 = s.match(/#([a-f0-9]{2})([a-f0-9]{2})([a-f0-9]{2})/i);
+    if (hex6) {
+      return { r: parseInt(hex6[1], 16), g: parseInt(hex6[2], 16), b: parseInt(hex6[3], 16) };
+    }
+    const hex3 = s.match(/#([a-f0-9])([a-f0-9])([a-f0-9])/i);
+    if (hex3) {
+      return { r: parseInt(hex3[1] + hex3[1], 16), g: parseInt(hex3[2] + hex3[2], 16), b: parseInt(hex3[3] + hex3[3], 16) };
+    }
+    return null;
+  }
+
+  function getSvgColorCandidates(svgEl) {
+    if (!svgEl) return [];
+    const colorStrings = [];
+    const elements = [
+      svgEl.querySelector ? svgEl.querySelector('path') : null,
+      svgEl.querySelector ? svgEl.querySelector('g') : null,
+      svgEl,
+      svgEl.parentElement
+    ].filter(Boolean);
+
+    for (const el of elements) {
+      // 1. Direct SVG fill and color attributes
+      const fillAttr = el.getAttribute ? el.getAttribute('fill') : null;
+      if (fillAttr) colorStrings.push(fillAttr);
+      const colorAttr = el.getAttribute ? el.getAttribute('color') : null;
+      if (colorAttr) colorStrings.push(colorAttr);
+
+      // 2. Inline style attribute (e.g. style="color: rgb(130, 154, 171);")
+      const styleAttr = el.getAttribute ? el.getAttribute('style') : null;
+      if (styleAttr) {
+        const fillInline = styleAttr.match(/fill:\s*([^;]+)/i);
+        if (fillInline) colorStrings.push(fillInline[1]);
+        const colorInline = styleAttr.match(/color:\s*([^;]+)/i);
+        if (colorInline) colorStrings.push(colorInline[1]);
+      }
+
+      // 3. Inline style object
+      if (el.style) {
+        if (el.style.fill) colorStrings.push(el.style.fill);
+        if (el.style.color) colorStrings.push(el.style.color);
+      }
+
+      // 4. Computed style: check fill first for SVG elements!
+      try {
+        const cs = window.getComputedStyle(el);
+        if (cs.fill && cs.fill !== 'none' && cs.fill !== 'transparent') {
+          colorStrings.push(cs.fill);
+        }
+        if (cs.color) {
+          colorStrings.push(cs.color);
+        }
+      } catch (e) {}
+    }
+    return colorStrings;
+  }
+
   /**
    * Helper to determine if a verified SVG icon on X represents the official Grey Badge (Government / Head of State)
    */
   function isSvgGreyBadge(svgEl) {
     if (!svgEl) return false;
-    const aria = (svgEl.getAttribute('aria-label') || '').toLowerCase();
-    // 1. Direct aria-label mentions
-    if (/government|multilateral|state-affiliated|دولتی|حاکمیتی/i.test(aria)) {
-      return true;
-    }
-    // Exclude blue or gold checkmark explicitly named
-    if (/blue|gold|subscribed|طلایی|تیک\s*آبی/i.test(aria)) {
-      return false;
-    }
 
-    // 2. Computed Color Inspection
-    try {
-      const candidates = [
-        svgEl,
-        svgEl.parentElement,
-        svgEl.querySelector('path'),
-        svgEl.querySelector('g')
-      ].filter(Boolean);
+    // 1. Check aria-labels, titles, and href links
+    const searchTargets = [
+      svgEl,
+      svgEl.parentElement,
+      svgEl.closest ? svgEl.closest('a') : null,
+      svgEl.closest ? svgEl.closest('div') : null
+    ].filter(Boolean);
 
-      for (const el of candidates) {
-        const style = window.getComputedStyle(el);
-        const colorStr = style.color || style.fill || '';
-        const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-        if (match) {
-          const r = parseInt(match[1], 10);
-          const g = parseInt(match[2], 10);
-          const b = parseInt(match[3], 10);
-
-          // Exclude Blue Checkmark: Blue is high and dominates Red
-          if (b > 175 && (b - r > 65)) return false;
-
-          // Exclude Gold Checkmark: Red and Green are high, Blue is low
-          if (r > 190 && g > 140 && b < 90) return false;
-
-          // Exclude extreme white/black
-          if (r > 245 && g > 245 && b > 245) continue;
-          if (r < 35 && g < 35 && b < 35) continue;
-
-          // Grey Badge on Twitter/X:
-          // Monochromatic/low saturation (diff <= 58) and mid brightness (45 <= max <= 215)
-          const maxC = Math.max(r, g, b);
-          const minC = Math.min(r, g, b);
-          if ((maxC - minC) <= 58 && maxC >= 45 && maxC <= 215) {
-            return true;
-          }
-        }
+    for (const target of searchTargets) {
+      const aria = (target.getAttribute('aria-label') || target.getAttribute('title') || '').toLowerCase();
+      if (/government|multilateral|state-affiliated|دولتی|حاکمیتی|regierungsvertreter|offiziell|official government/i.test(aria)) {
+        return true;
       }
-    } catch (e) {
-      // Fallback
+      if (/blue|gold|subscribed|طلایی|تیک\s*آبی/i.test(aria)) {
+        return false;
+      }
+      const href = (target.getAttribute ? (target.getAttribute('href') || '') : '').toLowerCase();
+      if (href.includes('government') || href.includes('profile-labels')) {
+        return true;
+      }
     }
+
+    // 2. Computed & Attribute Color Inspection
+    const colorCandidates = getSvgColorCandidates(svgEl);
+    for (const str of colorCandidates) {
+      const rgb = parseColorToRgb(str);
+      if (!rgb) continue;
+      const { r, g, b } = rgb;
+
+      // Ignore text colors (dark mode text > 225 or light mode text < 45)
+      if (r > 225 && g > 225 && b > 225) continue;
+      if (r < 45 && g < 45 && b < 45) continue;
+
+      // Exclude Blue Checkmark (#1d9bf0: 29, 155, 240)
+      if (b > 175 && (b - r > 65)) return false;
+
+      // Exclude Gold Checkmark (#ffd400: 255, 212, 0)
+      if (r > 190 && g > 140 && b < 85) return false;
+
+      // Grey Badge on Twitter/X:
+      // #829aab (130, 154, 171), #71767b (113, 118, 123), #657786, #8b98a5, #536471, #aab8c2
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      if ((maxC - minC) <= 50 && maxC >= 55 && maxC <= 218) {
+        return true;
+      }
+    }
+
     return false;
   }
 
@@ -147,7 +211,7 @@
 
     // 2. Check all verified SVGs inside container or UserName element
     const verifiedSvgs = containerEl.querySelectorAll(
-      'svg[data-testid="icon-verified"], svg[aria-label*="Verified"], svg[aria-label*="تایید"], svg[aria-label*="تأیید"], svg[aria-label*="Government"], svg[aria-label*="دولتی"]'
+      'svg[data-testid="icon-verified"], [data-testid="icon-verified"] svg, svg[aria-label*="Verifi" i], svg[aria-label*="تایید"], svg[aria-label*="تأیید"], svg[aria-label*="Government" i], svg[aria-label*="دولتی"], [data-testid="UserAffiliateBadge"] svg'
     );
 
     for (const svgEl of verifiedSvgs) {
@@ -164,44 +228,38 @@
    */
   function isSvgGoldBadge(svgEl) {
     if (!svgEl) return false;
-    const aria = (svgEl.getAttribute('aria-label') || '').toLowerCase();
+
     // 1. Direct aria-label mentions
-    if (/organization|business|سازمان|شرکت|طلایی|gold/i.test(aria)) {
-      return true;
-    }
-    // Exclude blue or grey checkmarks
-    if (/blue|grey|gray|خاکستری|تیک\s*آبی/i.test(aria)) {
-      return false;
-    }
+    const searchTargets = [
+      svgEl,
+      svgEl.parentElement,
+      svgEl.closest ? svgEl.closest('a') : null,
+      svgEl.closest ? svgEl.closest('div') : null
+    ].filter(Boolean);
 
-    // 2. Computed Color Inspection
-    try {
-      const candidates = [
-        svgEl,
-        svgEl.parentElement,
-        svgEl.querySelector('path'),
-        svgEl.querySelector('g')
-      ].filter(Boolean);
-
-      for (const el of candidates) {
-        const style = window.getComputedStyle(el);
-        const colorStr = style.color || style.fill || '';
-        const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-        if (match) {
-          const r = parseInt(match[1], 10);
-          const g = parseInt(match[2], 10);
-          const b = parseInt(match[3], 10);
-
-          // Gold checkmark on X: #ffd400 / rgb(255, 212, 0)
-          // Red and Green are high, Blue is very low
-          if (r >= 180 && g >= 140 && b <= 75) {
-            return true;
-          }
-        }
+    for (const target of searchTargets) {
+      const aria = (target.getAttribute('aria-label') || target.getAttribute('title') || '').toLowerCase();
+      if (/organization|business|سازمان|شرکت|طلایی|gold/i.test(aria)) {
+        return true;
       }
-    } catch (e) {
-      // Fallback
+      if (/blue|grey|gray|خاکستری|تیک\s*آبی/i.test(aria)) {
+        return false;
+      }
     }
+
+    // 2. Computed & Attribute Color Inspection
+    const colorCandidates = getSvgColorCandidates(svgEl);
+    for (const str of colorCandidates) {
+      const rgb = parseColorToRgb(str);
+      if (!rgb) continue;
+      const { r, g, b } = rgb;
+
+      // Gold checkmark on X: #ffd400 / rgb(255, 212, 0)
+      if (r >= 180 && g >= 140 && b <= 80) {
+        return true;
+      }
+    }
+
     return false;
   }
 
@@ -213,7 +271,7 @@
 
     // Check verified SVGs
     const verifiedSvgs = containerEl.querySelectorAll(
-      'svg[data-testid="icon-verified"], svg[aria-label*="Verified"], svg[aria-label*="تایید"], svg[aria-label*="تأیید"], svg[aria-label*="Organization"], svg[aria-label*="طلایی"]'
+      'svg[data-testid="icon-verified"], [data-testid="icon-verified"] svg, svg[aria-label*="Verifi" i], svg[aria-label*="تایید"], svg[aria-label*="تأیید"], svg[aria-label*="Organization" i], svg[aria-label*="طلایی"], svg[aria-label*="Business" i]'
     );
 
     for (const svgEl of verifiedSvgs) {
@@ -3240,7 +3298,8 @@
           model: response.model,
           authorHandle,
           displayName: tweetAuthor,
-          isGreyBadge: Boolean(isGreyBadge),
+          isGreyBadge: Boolean(isGreyBadge || response.isGovernment || response.faction === 'government'),
+          isGoldBadge: Boolean(isGoldBadge || response.isGoldBadge || response.faction === 'organization'),
           isMekAlert: response.isMekAlert,
           isFalseFlag: response.isFalseFlag,
           restId: response.restId || tweetRestId,
@@ -3351,14 +3410,19 @@
         isAuthorGreyBadge(headerContainer) ||
         isAuthorGreyBadge(userNameEl) ||
         isAuthorGreyBadge(document.querySelector('[data-testid="UserName"]')) ||
-        isAuthorGreyBadge(document.querySelector('[data-testid="User-Name"]'))
+        isAuthorGreyBadge(document.querySelector('[data-testid="User-Name"]')) ||
+        isAuthorGreyBadge(document.querySelector('[data-testid="UserProfileHeader_Items"]')) ||
+        isAuthorGreyBadge(document.querySelector('[data-testid="primaryColumn"]')) ||
+        Boolean(document.querySelector('[data-testid="UserAffiliateBadge"]'))
       );
       const isGreyBadge = isCachedProfileStrictGov || domProfileGreyBadge;
       const domProfileGoldBadge = !isIranianProfile && (!isGreyBadge) && (
         isAuthorGoldBadge(headerContainer) ||
         isAuthorGoldBadge(userNameEl) ||
         isAuthorGoldBadge(document.querySelector('[data-testid="UserName"]')) ||
-        isAuthorGoldBadge(document.querySelector('[data-testid="User-Name"]'))
+        isAuthorGoldBadge(document.querySelector('[data-testid="User-Name"]')) ||
+        isAuthorGoldBadge(document.querySelector('[data-testid="UserProfileHeader_Items"]')) ||
+        isAuthorGoldBadge(document.querySelector('[data-testid="primaryColumn"]'))
       );
       const isGoldBadge = (!isGreyBadge) && (Boolean(cachedProfileRecord?.isGoldBadge) || domProfileGoldBadge || cachedProfileRecord?.verifiedType === 'Business');
       const verifiedType = isGreyBadge ? 'Government' : (isGoldBadge ? 'Business' : (cachedProfileRecord?.verifiedType || ''));
@@ -3469,7 +3533,8 @@
             model: response.model,
             authorHandle: username,
             displayName,
-            isGreyBadge: Boolean(isGreyBadge),
+            isGreyBadge: Boolean(isGreyBadge || response.isGovernment || response.faction === 'government'),
+          isGoldBadge: Boolean(isGoldBadge || response.isGoldBadge || response.faction === 'organization'),
             isMekAlert: response.isMekAlert,
             isFalseFlag: response.isFalseFlag,
             restId: response.restId || profileRestId,

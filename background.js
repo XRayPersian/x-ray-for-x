@@ -172,6 +172,28 @@ const BOT_DETECTOR_SYSTEM_PROMPT = `شما «Account X-Ray» هستید؛ سیس
  */
 const KNOWN_AUTHENTIC_ENTITIES = [
   {
+    handles: ['realdonaldtrump', 'potus', 'whitehouse', 'vp', 'statedept'],
+    names: [
+      'donald j trump', 'donald trump', 'president donald j trump', 'president donald trump',
+      'the white house', 'president of the united states', 'donald j. trump',
+      '45th & 47th president of the united states of america', '45th & 47th president'
+    ],
+    identity: '🏛️ حساب رسمی دولتی / حاکمیتی ایالات متحده آمریکا: دونالد ترامپ (@realDonaldTrump)',
+    probability: '۰٪ (حساب رسمی دولتی، وزارتی، دیپلماتیک خارجی یا متعلق به سران کشورها)',
+    redFlags: '• حساب کاربری رسمی رئیس‌جمهور ایالات متحده آمریکا.\n• دارای نشان تایید خاکستری رسمی دولتی توییتر/اکس (Grey Checkmark).\n• هویت ۱۰۰٪ تاییدشده دولتی بین‌المللی؛ این حساب متعلق به سران کشورها و نهادهای رسمی حاکمیتی است و در دسته‌بندی کاربران عادی یا ترول‌های سایبری قرار نمی‌گیرد.',
+    verdict: '🏛️ حساب رسمی دولتی و حاکمیتی ایالات متحده آمریکا (تیک خاکستری)؛ این حساب متعلق به رئیس‌جمهور آمریکا بوده و کاملاً خارج از دسته‌بندی کاربران عادی یا ترول‌های سایبری است.',
+    modelTag: 'Government Verified (تیک خاکستری رسمی دولتها و مقامات خارجی)'
+  },
+  {
+    handles: ['netanyahu', 'israelipm'],
+    names: ['benjamin netanyahu', 'בנימין נתניהو', 'بنیامین نتانیاهو', 'prime minister of israel'],
+    identity: '🏛️ حساب رسمی دولتی / حاکمیتی نخست‌وزیر کشور اسرائیل: بنیامین نتانیاهو (@netanyahu)',
+    probability: '۰٪ (حساب رسمی دولتی، وزارتی، دیپلماتیک خارجی یا متعلق به سران کشورها)',
+    redFlags: '• حساب کاربری رسمی نخست‌وزیر کشور اسرائیل.\n• دارای نشان تایید خاکستری رسمی دولتی توییتر/اکس (Grey Checkmark).\n• متعلق به سران کشورها و ساختار رسمی حاکمیتی خارجی.',
+    verdict: '🏛️ حساب رسمی دولتی و حاکمیتی نخست‌وزیر اسرائیل؛ اصالت ۱۰۰٪ رسمی و بین‌المللی.',
+    modelTag: 'Government Verified (تیک خاکستری رسمی دولتها و مقامات خارجی)'
+  },
+  {
     handles: ['israelpersian', 'israel_persian', 'israelinfarsi', 'israelinpersian'],
     names: ['اسرائیل به فارسی', 'وزارت امور خارجه اسرائیل', 'دولت اسرائیل', 'israel persian', 'israel in persian', 'israelpersian'],
     identity: '🌐 صفحه رسمی وزارت امور خارجه اسرائیل به فارسی (نهاد رسمی دیپلماتیک و دولتی خارجی)',
@@ -2470,7 +2492,13 @@ function analyzeAccountStructuralForensics(accountInfo, hashtagFreqMap) {
   }
 
   if (accountInfo.isVerified) {
-    clues.push('دارای تیک آبی (Verified)');
+    if (accountInfo.isGreyBadge || accountInfo.verifiedType === 'Government') {
+      clues.push('دارای نشان تایید خاکستری دولتی (Grey Checkmark)');
+    } else if (accountInfo.isGoldBadge || accountInfo.verifiedType === 'Business') {
+      clues.push('دارای نشان تایید طلایی سازمانی (Gold Checkmark)');
+    } else {
+      clues.push('دارای تیک آبی (Verified)');
+    }
   }
 
   botScore = Math.min(98, Math.max(2, botScore));
@@ -2683,7 +2711,8 @@ function evaluateAccountAlignment(accountInfo, customAccountsMap = {}, options =
     (
       Boolean(accountInfo.isGreyBadge) ||
       accountInfo.verifiedType === 'Government' ||
-      /تیک خاکستری|حساب رسمی دولتی|government\s*official/i.test(accountInfo.governmentLabel || '')
+      /تیک خاکستری|حساب رسمی دولتی|government\s*official|state-affiliated/i.test(accountInfo.governmentLabel || '') ||
+      (accountInfo.isVerified && /president of the united states|prime minister|head of state|department of state|white house/i.test(bio))
     )
   );
 
@@ -4105,6 +4134,10 @@ ${pinnedOrKnown.redFlags}
   // 2. Instant Verification for Recognized Authentic Public Figures & Media (Prince Reza Pahlavi, Press Office, Empress Farah, Diplomats, etc.)
   const known = matchKnownEntity(accountInfo.username, accountInfo.displayName, accountInfo.bio);
   if (known) {
+    const isGovEntity = Boolean(
+      (known.modelTag && known.modelTag.includes('Government')) ||
+      (known.identity && known.identity.includes('دولتی'))
+    );
     const formattedAnalysis = `🤖 تشخیص هویت اکانت: ${known.identity}
 📊 احتمال فیک/سایبری/بات بودن: ${known.probability}
 🚩 سرنخ‌ها و شواهد سازمانی یا رفتاری:
@@ -4114,7 +4147,9 @@ ${known.redFlags}
     return finalizeAnalysisResult({
       success: true,
       analysis: formattedAnalysis,
-      model: 'Verified Matrix (مرجع تایید چهره‌ها و رسانه‌ها)'
+      model: known.modelTag || 'Verified Matrix (مرجع تایید چهره‌ها و رسانه‌ها)',
+      isGovernment: isGovEntity,
+      faction: isGovEntity ? 'government' : (known.faction || '')
     }, accountInfo);
   }
 
@@ -4136,6 +4171,9 @@ ${rep.redFlags}
       success: true,
       analysis: formattedAnalysis,
       model: weightedAlignment.model,
+      isGovernment: Boolean(weightedAlignment.isGovernment),
+      isGoldBadge: Boolean(weightedAlignment.isGoldBadge),
+      faction: weightedAlignment.isGovernment ? 'government' : (weightedAlignment.isGoldBadge ? 'organization' : ''),
       isMekAlert: Boolean(weightedAlignment.isMekAlert),
       isFalseFlag: Boolean(weightedAlignment.isFalseFlag),
       harvestedData: enrichedAccountInfo.__harvestedData || null
