@@ -60,8 +60,8 @@
   }
 
   /**
-   * Check if author has an official Grey Badge (Government / State Authority / Multilateral Org)
-   * Strictly detects official grey checkmark accounts on X.
+   * Parses color string (rgb, rgba, hex 3/6) into { r, g, b } object
+   */
   function parseColorToRgb(str) {
     if (!str || typeof str !== 'string') return null;
     const s = str.trim();
@@ -88,7 +88,8 @@
       svgEl.querySelector ? svgEl.querySelector('path') : null,
       svgEl.querySelector ? svgEl.querySelector('g') : null,
       svgEl,
-      svgEl.parentElement
+      svgEl.parentElement,
+      svgEl.parentElement ? svgEl.parentElement.parentElement : null
     ].filter(Boolean);
 
     for (const el of elements) {
@@ -142,7 +143,7 @@
     ].filter(Boolean);
 
     for (const target of searchTargets) {
-      const aria = (target.getAttribute('aria-label') || target.getAttribute('title') || '').toLowerCase();
+      const aria = (target.getAttribute ? (target.getAttribute('aria-label') || target.getAttribute('title') || '') : '').toLowerCase();
       if (/government|multilateral|state-affiliated|دولتی|حاکمیتی|regierungsvertreter|offiziell|official government/i.test(aria)) {
         return true;
       }
@@ -238,7 +239,7 @@
     ].filter(Boolean);
 
     for (const target of searchTargets) {
-      const aria = (target.getAttribute('aria-label') || target.getAttribute('title') || '').toLowerCase();
+      const aria = (target.getAttribute ? (target.getAttribute('aria-label') || target.getAttribute('title') || '') : '').toLowerCase();
       if (/organization|business|سازمان|شرکت|طلایی|gold/i.test(aria)) {
         return true;
       }
@@ -3105,120 +3106,120 @@
       return;
     }
 
-    const tweetAuthor = extractTweetAuthor(tweetEl);
-    const authorHandle = extractAuthorHandle(tweetEl);
-    const currentTweetData = extractTweetData(tweetEl);
-    const currentTweetText = currentTweetData.rawMainText || currentTweetData.text;
-    const cleanHandle = authorHandle.replace('@', '').toLowerCase();
-    const cachedAuthorRecord = cleanHandle ? accountHistoryMemory.get(cleanHandle) : null;
-    const isIranianAccount = Boolean(
-      /^iranin[a-z]{2,15}$/i.test(cleanHandle) ||
-      /^(ir|iran)_?(emb|mission|consulate)/i.test(cleanHandle) ||
-      /^(emb|mission)_?(ir|iran)/i.test(cleanHandle) ||
-      /^(mfa_ir|irimfa|iranmfa|ir_mfa|irangov|president_ir|leader_ir)/i.test(cleanHandle)
-    );
-    const isCachedAuthorStrictGov = Boolean(
-      !isIranianAccount &&
-      cachedAuthorRecord &&
-      (Boolean(cachedAuthorRecord.isGreyBadge) || cachedAuthorRecord.verifiedType === 'Government')
-    );
-    const domIsGreyBadge = !isIranianAccount && isAuthorGreyBadge(tweetEl);
-    const isGreyBadge = isCachedAuthorStrictGov || domIsGreyBadge;
-    const domIsGoldBadge = !isIranianAccount && (!isGreyBadge) && isAuthorGoldBadge(tweetEl);
-    const isGoldBadge = (!isGreyBadge) && (Boolean(cachedAuthorRecord?.isGoldBadge) || domIsGoldBadge || cachedAuthorRecord?.verifiedType === 'Business');
-    const verifiedType = isGreyBadge ? 'Government' : (isGoldBadge ? 'Business' : (cachedAuthorRecord?.verifiedType || ''));
-    const governmentLabel = isGreyBadge
-      ? (cachedAuthorRecord?.governmentLabel || extractAffiliateLabel(tweetEl) || 'حساب رسمی دولتی / حاکمیتی')
-      : (isGoldBadge ? 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)' : '');
-    const isVerified = Boolean(isAuthorVerified(tweetEl) || isGreyBadge || isGoldBadge || (cachedAuthorRecord && cachedAuthorRecord.isVerified));
-
-    // Check if user is currently on this author's profile page (e.g. x.com/mslm1090305)
-    let bio = '';
-    let userUrl = '';
-    let metadata = '';
-    let joinDate = '';
-    let followersRaw = '';
-    let followingRaw = '';
-    let followerStats = '';
-    const currentPath = window.location.pathname.toLowerCase();
-    const isProfilePage = cleanHandle && (currentPath === `/${cleanHandle}` || currentPath.startsWith(`/${cleanHandle}/`));
-
-    if (isProfilePage) {
-      const userDescEl = document.querySelector('div[data-testid="UserDescription"]');
-      const userHeaderItems = document.querySelector('div[data-testid="UserProfileHeader_Items"]');
-      const userUrlEl = document.querySelector('a[data-testid="UserUrl"]');
-      const joinDateEl = document.querySelector('[data-testid="UserJoinDate"]');
-      if (userDescEl) bio = (userDescEl.innerText || '').trim();
-      if (userHeaderItems) metadata = (userHeaderItems.innerText || '').trim().replace(/\n+/g, ' | ');
-      if (userUrlEl) userUrl = (userUrlEl.innerText || userUrlEl.href || '').trim();
-      if (joinDateEl) joinDate = (joinDateEl.innerText || '').trim();
-
-      const followersLink = document.querySelector('a[href*="/followers"], a[href*="/verified_followers"]');
-      const followingLink = document.querySelector('a[href*="/following"]');
-      if (followersLink) {
-        followersRaw = followersLink.innerText.trim().replace(/\n+/g, ' ');
-        followerStats += `دنبال‌کنندگان: ${followersRaw} | `;
-      }
-      if (followingLink) {
-        followingRaw = followingLink.innerText.trim().replace(/\n+/g, ' ');
-        followerStats += `دنبال‌شوندگان: ${followingRaw}`;
-      }
-      if (cleanHandle) {
-        const rec = ensureAccountHistoryRecord(cleanHandle);
-        if (bio) rec.bio = bio;
-        if (joinDate) rec.joinDate = joinDate;
-        if (userUrl) rec.userUrl = userUrl;
-        if (followersRaw) rec.followersRaw = followersRaw;
-        if (followingRaw) rec.followingRaw = followingRaw;
-      }
-    } else if (cleanHandle && accountHistoryMemory.has(cleanHandle)) {
-      const cached = accountHistoryMemory.get(cleanHandle);
-      if (cached.bio) bio = cached.bio;
-      if (cached.joinDate) joinDate = cached.joinDate;
-      if (cached.userUrl) userUrl = cached.userUrl;
-      if (cached.followersRaw) {
-        followersRaw = cached.followersRaw;
-        followerStats += `دنبال‌کنندگان: ${followersRaw} | `;
-      }
-      if (cached.followingRaw) {
-        followingRaw = cached.followingRaw;
-        followerStats += `دنبال‌شوندگان: ${followingRaw}`;
-      }
-    }
-
-    // Set Loading UI on Button
-    botBtn.disabled = true;
-    botBtn.classList.add('xray-btn-loading');
-    botBtn.innerHTML = `<span class="xray-spinner" style="border-top-color: #f59e0b;"></span><span class="xray-btn-label">بررسی پروفایل و پست‌ها...</span>`;
-
-    // Render Account Loading Box
-    renderAccountResultBox(tweetEl, actionGroup, null, { isLoading: true, authorHandle, displayName: tweetAuthor });
-
-    activeScans.add(tweetEl);
-
-    // If on profile page, harvest older tweets from timeline before sending
-    if (isProfilePage) {
-      await harvestProfileTimelineOnDemand(cleanHandle);
-    }
-
-    const allReferencedHandles = new Set(currentTweetData.referencedHandles);
-    const allLinks = new Set(currentTweetData.links);
-    if (userUrl) allLinks.add(userUrl);
-
-    if (authorHandle) {
-      document.querySelectorAll('article[data-testid="tweet"]').forEach(t => {
-        if (extractAuthorHandle(t) === authorHandle) {
-          const tData = extractTweetData(t);
-          tData.referencedHandles.forEach(h => allReferencedHandles.add(h));
-          tData.links.forEach(l => allLinks.add(l));
-        }
-      });
-    }
-
-    const historyPayload = buildAccountHistoryPayload(cleanHandle, currentTweetData, bio);
-    const tweetRestId = (cleanHandle && accountHistoryMemory.get(cleanHandle)?.restId) || handleToRestId.get(normalizeHandleKey(cleanHandle)) || '';
-
     try {
+      const tweetAuthor = extractTweetAuthor(tweetEl);
+      const authorHandle = extractAuthorHandle(tweetEl);
+      const currentTweetData = extractTweetData(tweetEl);
+      const currentTweetText = currentTweetData.rawMainText || currentTweetData.text;
+      const cleanHandle = authorHandle.replace('@', '').toLowerCase();
+      const cachedAuthorRecord = cleanHandle ? accountHistoryMemory.get(cleanHandle) : null;
+      const isIranianAccount = Boolean(
+        /^iranin[a-z]{2,15}$/i.test(cleanHandle) ||
+        /^(ir|iran)_?(emb|mission|consulate)/i.test(cleanHandle) ||
+        /^(emb|mission)_?(ir|iran)/i.test(cleanHandle) ||
+        /^(mfa_ir|irimfa|iranmfa|ir_mfa|irangov|president_ir|leader_ir)/i.test(cleanHandle)
+      );
+      const isCachedAuthorStrictGov = Boolean(
+        !isIranianAccount &&
+        cachedAuthorRecord &&
+        (Boolean(cachedAuthorRecord.isGreyBadge) || cachedAuthorRecord.verifiedType === 'Government')
+      );
+      const domIsGreyBadge = !isIranianAccount && isAuthorGreyBadge(tweetEl);
+      const isGreyBadge = isCachedAuthorStrictGov || domIsGreyBadge;
+      const domIsGoldBadge = !isIranianAccount && (!isGreyBadge) && isAuthorGoldBadge(tweetEl);
+      const isGoldBadge = (!isGreyBadge) && (Boolean(cachedAuthorRecord?.isGoldBadge) || domIsGoldBadge || cachedAuthorRecord?.verifiedType === 'Business');
+      const verifiedType = isGreyBadge ? 'Government' : (isGoldBadge ? 'Business' : (cachedAuthorRecord?.verifiedType || ''));
+      const governmentLabel = isGreyBadge
+        ? (cachedAuthorRecord?.governmentLabel || extractAffiliateLabel(tweetEl) || 'حساب رسمی دولتی / حاکمیتی')
+        : (isGoldBadge ? 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)' : '');
+      const isVerified = Boolean(isAuthorVerified(tweetEl) || isGreyBadge || isGoldBadge || (cachedAuthorRecord && cachedAuthorRecord.isVerified));
+
+      // Check if user is currently on this author's profile page (e.g. x.com/mslm1090305)
+      let bio = '';
+      let userUrl = '';
+      let metadata = '';
+      let joinDate = '';
+      let followersRaw = '';
+      let followingRaw = '';
+      let followerStats = '';
+      const currentPath = window.location.pathname.toLowerCase();
+      const isProfilePage = cleanHandle && (currentPath === `/${cleanHandle}` || currentPath.startsWith(`/${cleanHandle}/`));
+
+      if (isProfilePage) {
+        const userDescEl = document.querySelector('div[data-testid="UserDescription"]');
+        const userHeaderItems = document.querySelector('div[data-testid="UserProfileHeader_Items"]');
+        const userUrlEl = document.querySelector('a[data-testid="UserUrl"]');
+        const joinDateEl = document.querySelector('[data-testid="UserJoinDate"]');
+        if (userDescEl) bio = (userDescEl.innerText || '').trim();
+        if (userHeaderItems) metadata = (userHeaderItems.innerText || '').trim().replace(/\n+/g, ' | ');
+        if (userUrlEl) userUrl = (userUrlEl.innerText || userUrlEl.href || '').trim();
+        if (joinDateEl) joinDate = (joinDateEl.innerText || '').trim();
+
+        const followersLink = document.querySelector('a[href*="/followers"], a[href*="/verified_followers"]');
+        const followingLink = document.querySelector('a[href*="/following"]');
+        if (followersLink) {
+          followersRaw = followersLink.innerText.trim().replace(/\n+/g, ' ');
+          followerStats += `دنبال‌کنندگان: ${followersRaw} | `;
+        }
+        if (followingLink) {
+          followingRaw = followingLink.innerText.trim().replace(/\n+/g, ' ');
+          followerStats += `دنبال‌شوندگان: ${followingRaw}`;
+        }
+        if (cleanHandle) {
+          const rec = ensureAccountHistoryRecord(cleanHandle);
+          if (bio) rec.bio = bio;
+          if (joinDate) rec.joinDate = joinDate;
+          if (userUrl) rec.userUrl = userUrl;
+          if (followersRaw) rec.followersRaw = followersRaw;
+          if (followingRaw) rec.followingRaw = followingRaw;
+        }
+      } else if (cleanHandle && accountHistoryMemory.has(cleanHandle)) {
+        const cached = accountHistoryMemory.get(cleanHandle);
+        if (cached.bio) bio = cached.bio;
+        if (cached.joinDate) joinDate = cached.joinDate;
+        if (cached.userUrl) userUrl = cached.userUrl;
+        if (cached.followersRaw) {
+          followersRaw = cached.followersRaw;
+          followerStats += `دنبال‌کنندگان: ${followersRaw} | `;
+        }
+        if (cached.followingRaw) {
+          followingRaw = cached.followingRaw;
+          followerStats += `دنبال‌شوندگان: ${followingRaw}`;
+        }
+      }
+
+      // Set Loading UI on Button
+      botBtn.disabled = true;
+      botBtn.classList.add('xray-btn-loading');
+      botBtn.innerHTML = `<span class="xray-spinner" style="border-top-color: #f59e0b;"></span><span class="xray-btn-label">بررسی پروفایل و پست‌ها...</span>`;
+
+      // Render Account Loading Box
+      renderAccountResultBox(tweetEl, actionGroup, null, { isLoading: true, authorHandle, displayName: tweetAuthor });
+
+      activeScans.add(tweetEl);
+
+      // If on profile page, harvest older tweets from timeline before sending
+      if (isProfilePage) {
+        await harvestProfileTimelineOnDemand(cleanHandle);
+      }
+
+      const allReferencedHandles = new Set(currentTweetData.referencedHandles);
+      const allLinks = new Set(currentTweetData.links);
+      if (userUrl) allLinks.add(userUrl);
+
+      if (authorHandle) {
+        document.querySelectorAll('article[data-testid="tweet"]').forEach(t => {
+          if (extractAuthorHandle(t) === authorHandle) {
+            const tData = extractTweetData(t);
+            tData.referencedHandles.forEach(h => allReferencedHandles.add(h));
+            tData.links.forEach(l => allLinks.add(l));
+          }
+        });
+      }
+
+      const historyPayload = buildAccountHistoryPayload(cleanHandle, currentTweetData, bio);
+      const tweetRestId = (cleanHandle && accountHistoryMemory.get(cleanHandle)?.restId) || handleToRestId.get(normalizeHandleKey(cleanHandle)) || '';
+
       const response = await chrome.runtime.sendMessage({
         action: 'ANALYZE_ACCOUNT',
         accountInfo: {
@@ -3376,117 +3377,117 @@
     scanBtn.innerHTML = `🕵️ اسکن اصالت و سابقه اکانت (Account X-Ray Bot Scout)`;
 
     scanBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const existingProfileBox = headerContainer.querySelector('.xray-account-box');
-      if (existingProfileBox) {
-        existingProfileBox.remove();
-        scanBtn.innerHTML = `🕵️ اسکن اصالت و سابقه اکانت (Account X-Ray Bot Scout)`;
-        return;
-      }
-
-      const displayName = userNameEl.innerText.split('\n')[0] || '';
-      const handleMatch = userNameEl.innerText.match(/@([a-zA-Z0-9_]+)/);
-      const username = handleMatch ? `@${handleMatch[1]}` : '';
-      const cleanHandle = username.replace('@', '').toLowerCase();
-      const bio = userDescription ? userDescription.innerText.trim() : '';
-      const metadata = userHeaderItems ? userHeaderItems.innerText.trim().replace(/\n+/g, ' | ') : '';
-      const joinDateEl = document.querySelector('[data-testid="UserJoinDate"]');
-      const joinDate = joinDateEl ? (joinDateEl.innerText || '').trim() : '';
-      const cachedProfileRecord = cleanHandle ? accountHistoryMemory.get(cleanHandle) : null;
-      const isIranianProfile = Boolean(
-        /^iranin[a-z]{2,15}$/i.test(cleanHandle) ||
-        /^(ir|iran)_?(emb|mission|consulate)/i.test(cleanHandle) ||
-        /^(emb|mission)_?(ir|iran)/i.test(cleanHandle) ||
-        /^(mfa_ir|irimfa|iranmfa|ir_mfa|irangov|president_ir|leader_ir)/i.test(cleanHandle)
-      );
-      const isCachedProfileStrictGov = Boolean(
-        !isIranianProfile &&
-        cachedProfileRecord &&
-        (Boolean(cachedProfileRecord.isGreyBadge) || cachedProfileRecord.verifiedType === 'Government')
-      );
-      const domProfileGreyBadge = !isIranianProfile && (
-        isAuthorGreyBadge(headerContainer) ||
-        isAuthorGreyBadge(userNameEl) ||
-        isAuthorGreyBadge(document.querySelector('[data-testid="UserName"]')) ||
-        isAuthorGreyBadge(document.querySelector('[data-testid="User-Name"]')) ||
-        isAuthorGreyBadge(document.querySelector('[data-testid="UserProfileHeader_Items"]')) ||
-        isAuthorGreyBadge(document.querySelector('[data-testid="primaryColumn"]')) ||
-        Boolean(document.querySelector('[data-testid="UserAffiliateBadge"]'))
-      );
-      const isGreyBadge = isCachedProfileStrictGov || domProfileGreyBadge;
-      const domProfileGoldBadge = !isIranianProfile && (!isGreyBadge) && (
-        isAuthorGoldBadge(headerContainer) ||
-        isAuthorGoldBadge(userNameEl) ||
-        isAuthorGoldBadge(document.querySelector('[data-testid="UserName"]')) ||
-        isAuthorGoldBadge(document.querySelector('[data-testid="User-Name"]')) ||
-        isAuthorGoldBadge(document.querySelector('[data-testid="UserProfileHeader_Items"]')) ||
-        isAuthorGoldBadge(document.querySelector('[data-testid="primaryColumn"]'))
-      );
-      const isGoldBadge = (!isGreyBadge) && (Boolean(cachedProfileRecord?.isGoldBadge) || domProfileGoldBadge || cachedProfileRecord?.verifiedType === 'Business');
-      const verifiedType = isGreyBadge ? 'Government' : (isGoldBadge ? 'Business' : (cachedProfileRecord?.verifiedType || ''));
-      const governmentLabel = isGreyBadge ? (cachedProfileRecord?.governmentLabel ||
-        extractAffiliateLabel(headerContainer) ||
-        extractAffiliateLabel(userNameEl) ||
-        extractAffiliateLabel(document.querySelector('[data-testid="UserName"]')) ||
-        'حساب رسمی دولتی / حاکمیتی (تیک خاکستری)') : (isGoldBadge ? 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)' : '');
-      const isVerified = Boolean(
-        isAuthorVerified(headerContainer) ||
-        isAuthorVerified(userNameEl) ||
-        isGreyBadge ||
-        isGoldBadge ||
-        (cachedProfileRecord && cachedProfileRecord.isVerified)
-      );
-
-      // Scrape external user website URL if present in profile header
-      const userUrlEl = document.querySelector('a[data-testid="UserUrl"]');
-      const userUrl = userUrlEl ? (userUrlEl.innerText || userUrlEl.href || '').trim() : '';
-
-      // Scrape links inside bio
-      const bioLinks = userDescription
-        ? Array.from(userDescription.querySelectorAll('a[href]')).map(a => (a.innerText || a.href || '').trim()).filter(Boolean)
-        : [];
-
-      // Scrape followers count and following count if visible
-      let followerStats = '';
-      let followersRaw = '';
-      let followingRaw = '';
-      const followersLink = document.querySelector('a[href*="/followers"], a[href*="/verified_followers"]');
-      const followingLink = document.querySelector('a[href*="/following"]');
-      if (followersLink) {
-        followersRaw = followersLink.innerText.trim().replace(/\n+/g, ' ');
-        followerStats += `دنبال‌کنندگان: ${followersRaw} | `;
-      }
-      if (followingLink) {
-        followingRaw = followingLink.innerText.trim().replace(/\n+/g, ' ');
-        followerStats += `دنبال‌شوندگان: ${followingRaw}`;
-      }
-
-      scanBtn.disabled = true;
-      scanBtn.innerHTML = `<span class="xray-spinner" style="border-top-color: #f59e0b;"></span> در حال کالبدشکافی پست‌های قدیمی، گراف تعاملات و هشتگ‌های ${username}...`;
-
-      renderAccountResultBox(headerContainer, banner, null, { isLoading: true, authorHandle: username, displayName });
-
-      // Perform active deep timeline harvest on the profile page
-      await harvestProfileTimelineOnDemand(cleanHandle);
-
-      const profileReferencedHandles = new Set();
-      const profileLinks = new Set();
-      if (userUrl) profileLinks.add(userUrl);
-      bioLinks.forEach(l => profileLinks.add(l));
-
-      const tweetArticles = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
-      tweetArticles.forEach((article) => {
-        const tData = extractTweetData(article);
-        tData.referencedHandles.forEach(h => profileReferencedHandles.add(h));
-        tData.links.forEach(l => profileLinks.add(l));
-      });
-
-      const historyPayload = buildAccountHistoryPayload(cleanHandle, null, bio);
-      const profileRestId = (cleanHandle && accountHistoryMemory.get(cleanHandle)?.restId) || handleToRestId.get(normalizeHandleKey(cleanHandle)) || '';
-
       try {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const existingProfileBox = headerContainer.querySelector('.xray-account-box:not(.xray-loading-state)');
+        if (existingProfileBox) {
+          existingProfileBox.remove();
+          scanBtn.innerHTML = `🕵️ اسکن اصالت و سابقه اکانت (Account X-Ray Bot Scout)`;
+          return;
+        }
+
+        const displayName = userNameEl.innerText.split('\n')[0] || '';
+        const handleMatch = userNameEl.innerText.match(/@([a-zA-Z0-9_]+)/);
+        const username = handleMatch ? `@${handleMatch[1]}` : '';
+        const cleanHandle = username.replace('@', '').toLowerCase();
+        const bio = userDescription ? userDescription.innerText.trim() : '';
+        const metadata = userHeaderItems ? userHeaderItems.innerText.trim().replace(/\n+/g, ' | ') : '';
+        const joinDateEl = document.querySelector('[data-testid="UserJoinDate"]');
+        const joinDate = joinDateEl ? (joinDateEl.innerText || '').trim() : '';
+        const cachedProfileRecord = cleanHandle ? accountHistoryMemory.get(cleanHandle) : null;
+        const isIranianProfile = Boolean(
+          /^iranin[a-z]{2,15}$/i.test(cleanHandle) ||
+          /^(ir|iran)_?(emb|mission|consulate)/i.test(cleanHandle) ||
+          /^(emb|mission)_?(ir|iran)/i.test(cleanHandle) ||
+          /^(mfa_ir|irimfa|iranmfa|ir_mfa|irangov|president_ir|leader_ir)/i.test(cleanHandle)
+        );
+        const isCachedProfileStrictGov = Boolean(
+          !isIranianProfile &&
+          cachedProfileRecord &&
+          (Boolean(cachedProfileRecord.isGreyBadge) || cachedProfileRecord.verifiedType === 'Government')
+        );
+        const domProfileGreyBadge = !isIranianProfile && (
+          isAuthorGreyBadge(headerContainer) ||
+          isAuthorGreyBadge(userNameEl) ||
+          isAuthorGreyBadge(document.querySelector('[data-testid="UserName"]')) ||
+          isAuthorGreyBadge(document.querySelector('[data-testid="User-Name"]')) ||
+          isAuthorGreyBadge(document.querySelector('[data-testid="UserProfileHeader_Items"]')) ||
+          isAuthorGreyBadge(document.querySelector('[data-testid="primaryColumn"]')) ||
+          Boolean(document.querySelector('[data-testid="UserAffiliateBadge"]'))
+        );
+        const isGreyBadge = isCachedProfileStrictGov || domProfileGreyBadge;
+        const domProfileGoldBadge = !isIranianProfile && (!isGreyBadge) && (
+          isAuthorGoldBadge(headerContainer) ||
+          isAuthorGoldBadge(userNameEl) ||
+          isAuthorGoldBadge(document.querySelector('[data-testid="UserName"]')) ||
+          isAuthorGoldBadge(document.querySelector('[data-testid="User-Name"]')) ||
+          isAuthorGoldBadge(document.querySelector('[data-testid="UserProfileHeader_Items"]')) ||
+          isAuthorGoldBadge(document.querySelector('[data-testid="primaryColumn"]'))
+        );
+        const isGoldBadge = (!isGreyBadge) && (Boolean(cachedProfileRecord?.isGoldBadge) || domProfileGoldBadge || cachedProfileRecord?.verifiedType === 'Business');
+        const verifiedType = isGreyBadge ? 'Government' : (isGoldBadge ? 'Business' : (cachedProfileRecord?.verifiedType || ''));
+        const governmentLabel = isGreyBadge ? (cachedProfileRecord?.governmentLabel ||
+          extractAffiliateLabel(headerContainer) ||
+          extractAffiliateLabel(userNameEl) ||
+          extractAffiliateLabel(document.querySelector('[data-testid="UserName"]')) ||
+          'حساب رسمی دولتی / حاکمیتی (تیک خاکستری)') : (isGoldBadge ? 'سازمان رسمی / شرکت ثبت‌شده (تیک طلایی)' : '');
+        const isVerified = Boolean(
+          isAuthorVerified(headerContainer) ||
+          isAuthorVerified(userNameEl) ||
+          isGreyBadge ||
+          isGoldBadge ||
+          (cachedProfileRecord && cachedProfileRecord.isVerified)
+        );
+
+        // Scrape external user website URL if present in profile header
+        const userUrlEl = document.querySelector('a[data-testid="UserUrl"]');
+        const userUrl = userUrlEl ? (userUrlEl.innerText || userUrlEl.href || '').trim() : '';
+
+        // Scrape links inside bio
+        const bioLinks = userDescription
+          ? Array.from(userDescription.querySelectorAll('a[href]')).map(a => (a.innerText || a.href || '').trim()).filter(Boolean)
+          : [];
+
+        // Scrape followers count and following count if visible
+        let followerStats = '';
+        let followersRaw = '';
+        let followingRaw = '';
+        const followersLink = document.querySelector('a[href*="/followers"], a[href*="/verified_followers"]');
+        const followingLink = document.querySelector('a[href*="/following"]');
+        if (followersLink) {
+          followersRaw = followersLink.innerText.trim().replace(/\n+/g, ' ');
+          followerStats += `دنبال‌کنندگان: ${followersRaw} | `;
+        }
+        if (followingLink) {
+          followingRaw = followingLink.innerText.trim().replace(/\n+/g, ' ');
+          followerStats += `دنبال‌شوندگان: ${followingRaw}`;
+        }
+
+        scanBtn.disabled = true;
+        scanBtn.innerHTML = `<span class="xray-spinner" style="border-top-color: #f59e0b;"></span> در حال کالبدشکافی پست‌های قدیمی، گراف تعاملات و هشتگ‌های ${username}...`;
+
+        renderAccountResultBox(headerContainer, banner, null, { isLoading: true, authorHandle: username, displayName });
+
+        // Perform active deep timeline harvest on the profile page
+        await harvestProfileTimelineOnDemand(cleanHandle);
+
+        const profileReferencedHandles = new Set();
+        const profileLinks = new Set();
+        if (userUrl) profileLinks.add(userUrl);
+        bioLinks.forEach(l => profileLinks.add(l));
+
+        const tweetArticles = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
+        tweetArticles.forEach((article) => {
+          const tData = extractTweetData(article);
+          tData.referencedHandles.forEach(h => profileReferencedHandles.add(h));
+          tData.links.forEach(l => profileLinks.add(l));
+        });
+
+        const historyPayload = buildAccountHistoryPayload(cleanHandle, null, bio);
+        const profileRestId = (cleanHandle && accountHistoryMemory.get(cleanHandle)?.restId) || handleToRestId.get(normalizeHandleKey(cleanHandle)) || '';
+
         const response = await chrome.runtime.sendMessage({
           action: 'ANALYZE_ACCOUNT',
           accountInfo: {
@@ -3534,7 +3535,7 @@
             authorHandle: username,
             displayName,
             isGreyBadge: Boolean(isGreyBadge || response.isGovernment || response.faction === 'government'),
-          isGoldBadge: Boolean(isGoldBadge || response.isGoldBadge || response.faction === 'organization'),
+            isGoldBadge: Boolean(isGoldBadge || response.isGoldBadge || response.faction === 'organization'),
             isMekAlert: response.isMekAlert,
             isFalseFlag: response.isFalseFlag,
             restId: response.restId || profileRestId,
@@ -3547,8 +3548,9 @@
           });
         }
       } catch (err) {
+        console.error('[X-Ray] Profile scan error:', err);
         scanBtn.disabled = false;
-        scanBtn.innerHTML = `🕵️ اسکن اصالت و سابقه اکانت (Account X-Ray Bot Scout)`;
+        scanBtn.innerHTML = `🕵️ اسکن مجدد اصالت اکانت`;
         renderAccountResultBox(headerContainer, banner, null, {
           isError: true,
           errorMessage: `خطا: ${err.message}`
