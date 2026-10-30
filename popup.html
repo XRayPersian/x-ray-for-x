@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Account Check Settings</title>
+  <title>X-Ray Settings</title>
   <style>
     :root {
       --bg-color: #0d0f12;
@@ -24,7 +24,7 @@
     }
 
     body {
-      width: 310px;
+      width: 320px;
       background-color: var(--bg-color);
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -285,7 +285,7 @@
     /* Helper link */
     .links-footer {
       border-top: 1px solid var(--border-color);
-      padding-top: 10px;
+      padding-top: 12px;
       text-align: center;
       font-size: 11.5px;
     }
@@ -320,138 +320,9 @@
     .remove-btn:hover {
       color: var(--error-color);
     }
-
-    /* Known Accounts Manager Section */
-    .accounts-section {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border-color);
-      direction: rtl;
-      text-align: right;
-    }
-
-    .accounts-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--accent-cyan);
-    }
-
-    .accounts-count-badge {
-      background: rgba(0, 242, 254, 0.12);
-      border: 1px solid rgba(0, 242, 254, 0.3);
-      color: var(--accent-cyan);
-      padding: 1px 7px;
-      border-radius: 99px;
-      font-size: 10.5px;
-      font-weight: 600;
-    }
-
-    .quick-add-row {
-      display: flex;
-      gap: 5px;
-      margin-bottom: 6px;
-    }
-
-    .quick-add-row input[type="text"] {
-      flex: 1.1;
-      padding: 6px 8px;
-      font-size: 11.5px;
-      direction: ltr;
-      text-align: left;
-    }
-
-    .quick-add-row select {
-      flex: 1.2;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 7px;
-      padding: 5px 6px;
-      color: #ffffff;
-      font-size: 11px;
-      outline: none;
-    }
-
-    .quick-add-btn {
-      background: var(--accent-cyan);
-      color: #000;
-      border: none;
-      border-radius: 7px;
-      padding: 0 10px;
-      font-weight: 700;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .accounts-list {
-      max-height: 115px;
-      overflow-y: auto;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 7px;
-      padding: 5px 7px;
-      margin-bottom: 8px;
-      font-size: 11px;
-    }
-
-    .account-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 0;
-      border-bottom: 1px dashed rgba(255,255,255,0.07);
-    }
-
-    .account-item:last-child {
-      border-bottom: none;
-    }
-
-    .account-handle {
-      font-family: ui-monospace, SFMono-Regular, monospace;
-      color: #e6edf3;
-      direction: ltr;
-      font-weight: 600;
-    }
-
-    .account-del-btn {
-      background: none;
-      border: none;
-      color: #f4212e;
-      cursor: pointer;
-      font-size: 11px;
-      padding: 0 4px;
-    }
-
-    .io-btn-row {
-      display: flex;
-      gap: 6px;
-    }
-
-    .btn-mini {
-      flex: 1;
-      padding: 6px 8px;
-      font-size: 11px;
-      border-radius: 6px;
-      background: var(--card-bg);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-
-    .btn-mini:hover {
-      border-color: var(--accent-cyan);
-      color: var(--accent-cyan);
-    }
   </style>
 </head>
-<body style="width: 340px;">
+<body>
   <!-- Header with X-Ray Logo -->
   <div class="header">
     <img src="icons/icon48.png" alt="X-Ray Logo" class="logo-img">
@@ -466,7 +337,7 @@
     <span id="modelDisplay" class="model-tag">⚡ Llama 3.3 70B</span>
     <span id="keyStatusBadge" style="display: flex; align-items: center; gap: 5px; color: var(--text-muted);">
       <span id="keyStatusDot" class="status-dot"></span>
-      <span id="keyStatusText">Kein Key</span>
+      <span id="keyStatusText">No Key</span>
     </span>
   </div>
 
@@ -476,87 +347,38 @@
   <!-- Input Form -->
   <div class="form-group">
     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-      <label for="apiKeyInput" style="margin-bottom: 0;">Groq API-Key</label>
-      <span style="font-size: 10px; color: #8b949e;">(Hostet alle Modelle)</span>
+      <label for="apiKeyInput" style="margin-bottom: 0;">GROQ API KEY</label>
+      <span style="font-size: 10px; color: #8b949e;">(Free at console.groq.com)</span>
     </div>
     <div class="input-wrapper">
       <input type="password" id="apiKeyInput" placeholder="gsk_..." autocomplete="off" spellcheck="false">
-      <button type="button" id="toggleVisibilityBtn" class="toggle-visibility-btn" title="Key anzeigen/verbergen">👁️</button>
+      <button type="button" id="toggleVisibilityBtn" class="toggle-visibility-btn" title="Show/Hide API Key">👁️</button>
     </div>
     <p style="font-size: 10.5px; color: var(--text-muted); margin-top: 5px; line-height: 1.35;">
-      Groq hostet alle Open-Source-Modelle (DeepSeek, Qwen, Llama) kostenlos &amp; extrem schnell über einen einzigen Key.
+      Groq provides ultra-fast, free inference for open-source AI models via a single API key.
     </p>
   </div>
 
   <!-- Model Dropdown -->
   <div class="form-group">
-    <label for="modelSelect">KI-Modell</label>
+    <label for="modelSelect">AI MODEL</label>
     <select id="modelSelect" class="model-select">
-      <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Standard)</option>
-      <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Sehr schnell / Hohes Limit)</option>
-      <option value="qwen/qwen3.8-27b">Qwen 27B (Top für Persisch / Farsi)</option>
-      <option value="qwen-2.5-32b">Qwen 2.5 32B (Top für Persisch)</option>
-      <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 Distill 70B (Starke Logik)</option>
-      <option value="openai/gpt-oss-120b">GPT OSS 120B (OpenAI MoE)</option>
-      <option value="openai/gpt-oss-20b">GPT OSS 20B (Sehr schnell / MoE)</option>
-      <option value="mixtral-8x7b-32768">Mixtral 8x7B (Ausgewogen)</option>
+      <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Recommended / Fast)</option>
+      <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Ultra Fast / High Limit)</option>
+      <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 Distill 70B (Advanced Reasoning)</option>
+      <option value="mixtral-8x7b-32768">Mixtral 8x7B (Balanced)</option>
       <option value="gemma2-9b-it">Gemma 2 9B (Google)</option>
     </select>
   </div>
 
   <div class="btn-row">
-    <button type="button" id="saveBtn" class="btn btn-primary">💾 Speichern</button>
-    <button type="button" id="testBtn" class="btn btn-secondary">⚡ Testen</button>
+    <button type="button" id="saveBtn" class="btn btn-primary">💾 Save</button>
+    <button type="button" id="testBtn" class="btn btn-secondary">⚡ Test Key</button>
   </div>
 
-  <!-- Known Political Accounts Manager (Idea #4) -->
-  <div class="accounts-section">
-    <div class="accounts-header">
-      <span>📌 بانک اکانت‌های شناخته‌شده</span>
-      <span id="accountsCountBadge" class="accounts-count-badge">۰ اکانت</span>
-    </div>
-
-    <div class="quick-add-row">
-      <input type="text" id="customHandleInput" placeholder="@username" autocomplete="off" spellcheck="false">
-      <select id="customFactionSelect">
-        <option value="pahlavi">🦁👑 ملی‌گرا و دموکرات (همراه پهلوی)</option>
-        <option value="farah">👑 علیاحضرت شهبانو فرح پهلوی (مادر میهن)</option>
-        <option value="vaisi">🦁🟢 مراد ویسی (راوی جان‌فداهای میهن)</option>
-        <option value="government">🏛️ حساب رسمی دولتی / حاکمیتی (تیک خاکستری)</option>
-        <option value="raisi">🚁 ابراهیم رئیسی / قاضی مرگ (بهلاکت‌رسیده)</option>
-        <option value="larijani">💥 علی لاریجانی (بهلاکت‌رسیده توسط اسرائیل)</option>
-        <option value="ghalibaf">🦀✈️ محمدباقر قالیباف (سردار گازانبری / خلبان اسباب‌بازی)</option>
-        <option value="chapi">🟣 چپ / چپول</option>
-        <option value="mek">🚨 مجاهدین خلق (MEK)</option>
-        <option value="arzeshi">🔴 ارزشی / سایبری رژیم</option>
-        <option value="eslahtalab">🟡 اصلاح‌طلب / استمرارطلب</option>
-        <option value="separatist">🏴 تجزیه‌طلب</option>
-        <option value="ronaghi">🎭 حسین رونقی (سوپاپ اصلاح‌طلبان / پروژه انحراف قیام)</option>
-        <option value="mohammadi">🟣 نرگس محمدی (پروژه فائزه هاشمی / چپ ۵۷ی و سانسورچی دادخواهان)</option>
-        <option value="toomaj">🟣🚩 توماج صالحی (چپ ۵۷ی و همسو با مجاهدین خلق)</option>
-        <option value="golshifteh">🟣🍉 گلشیفته فراهانی (سلبریتی چپول، ضد پرچم و مروج فلسطین)</option>
-        <option value="alidoosti">🟡🎬 ترانه علیدوستی (سلبریتی اصلاح‌طلب / پروژه فائزه هاشمی)</option>
-        <option value="afshari">🔴🗣️ علی افشاری (اصلاح‌طلب باقیمانده، خط اصولگرای رژیم و ضد پهلوی)</option>
-        <option value="false_flag">🎭👑 پادشاهی‌خواه قلابی / ضد پهلوی (هم‌سو با ج.ا.)</option>
-        <option value="media">🟢 رسانه / خبرنگار</option>
-      </select>
-      <button type="button" id="addCustomAccountBtn" class="quick-add-btn" title="ثبت دائمی اکانت">+ ثبت</button>
-    </div>
-
-    <div id="customAccountsList" class="accounts-list">
-      <div style="color: var(--text-muted); text-align: center; padding: 8px 0;">هنوز اکانت دستی ثبت نشده است.</div>
-    </div>
-
-    <div class="io-btn-row">
-      <button type="button" id="exportAccountsBtn" class="btn-mini">📤 خروجی JSON</button>
-      <button type="button" id="importAccountsBtn" class="btn-mini">📥 ورودی JSON</button>
-      <input type="file" id="importAccountsFileInput" accept=".json,application/json" style="display: none;">
-    </div>
-  </div>
-
-  <div class="links-footer" style="margin-top: 10px;">
-    <a href="#" id="groqConsoleLink" class="groq-link">Kostenlosen Key bei Groq holen ↗</a>
-    <button type="button" id="removeKeyBtn" class="remove-btn" style="display: none;">Key entfernen</button>
+  <div class="links-footer">
+    <a href="#" id="groqConsoleLink" class="groq-link">Get free Groq API key ↗</a>
+    <button type="button" id="removeKeyBtn" class="remove-btn" style="display: none;">Remove API Key</button>
   </div>
 
   <script src="popup.js"></script>

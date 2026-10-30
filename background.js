@@ -3777,7 +3777,7 @@ ${pinnedReport.redFlags}
       } catch (err) {
         sendResponse({
           success: false,
-          message: err.message || 'Fehler beim Verbindungstest.'
+          message: err.message || 'Error testing connection.'
         });
       }
     })();
@@ -3798,7 +3798,7 @@ async function fetchAvailableModels(keyToUse) {
   }
 
   if (!key) {
-    return { success: false, message: 'Kein API-Key angegeben.', models: [] };
+    return { success: false, message: 'No API key provided.', models: [] };
   }
 
   try {
@@ -3837,7 +3837,7 @@ async function handleApiKeyTest(keyToTest, preferredModel) {
     key = (storage.groqApiKey || storage.apiKey || '').trim();
   }
   if (!key) {
-    return { success: false, message: 'Kein API-Key angegeben.' };
+    return { success: false, message: 'No API key provided.' };
   }
 
   const controller = new AbortController();
@@ -3856,14 +3856,14 @@ async function handleApiKeyTest(keyToTest, preferredModel) {
     clearTimeout(timeoutId);
 
     if (modelsResponse.status === 401) {
-      return { success: false, message: 'Ungültiger API-Key (401 Unauthorized).' };
+      return { success: false, message: 'Invalid API key (401 Unauthorized).' };
     }
 
     if (!modelsResponse.ok) {
       const err = await modelsResponse.json().catch(() => null);
       return {
         success: false,
-        message: err?.error?.message || `HTTP ${modelsResponse.status} Fehler beim Verbindungstest.`
+        message: err?.error?.message || `HTTP ${modelsResponse.status} connection error.`
       };
     }
 
@@ -3921,7 +3921,7 @@ async function handleApiKeyTest(keyToTest, preferredModel) {
       await chrome.storage.sync.set({ selectedModel: modelToTest });
       return {
         success: true,
-        message: `API-Key ist gültig! Verbunden mit Modell: ${modelToTest}`,
+        message: `API key is valid! Connected to model: ${modelToTest}`,
         selectedModel: modelToTest,
         availableModels: sortedChatModels
       };
@@ -3946,7 +3946,7 @@ async function handleApiKeyTest(keyToTest, preferredModel) {
         await chrome.storage.sync.set({ selectedModel: FALLBACK_MODEL });
         return {
           success: true,
-          message: `Key gültig! Da ${modelToTest} für deinen Account nicht freigeschaltet ist, wurde automatisch ${FALLBACK_MODEL} aktiviert.`,
+          message: `Key valid! Model ${modelToTest} is unavailable for this key; fallback model ${FALLBACK_MODEL} was activated.`,
           selectedModel: FALLBACK_MODEL,
           availableModels: sortedChatModels
         };
@@ -3956,13 +3956,13 @@ async function handleApiKeyTest(keyToTest, preferredModel) {
     const pingErr = await pingResponse.json().catch(() => null);
     return {
       success: false,
-      message: pingErr?.error?.message || `HTTP ${pingResponse.status} beim Modul-Test.`
+      message: pingErr?.error?.message || `HTTP ${pingResponse.status} during model test.`
     };
   } catch (err) {
     clearTimeout(timeoutId);
     return {
       success: false,
-      message: err.name === 'AbortError' ? 'Timeout beim Verbindungstest.' : `Netzwerkfehler: ${err.message}`
+      message: err.name === 'AbortError' ? 'Connection test timed out.' : `Network error: ${err.message}`
     };
   }
 }
